@@ -6,6 +6,7 @@ _config();
 export const db = {
 	url: env.DB_URL,
 	name: env.DB_NAME,
+	debug: env.DB_DEBUG,
 };
 
 export const auth = {
@@ -13,5 +14,10 @@ export const auth = {
 	LICHESS_CLIENT_SECRET: env.LICHESS_CLIENT_SECRET,
 };
 
-export const port = env.APP_PORT;
+export const config = {
+	port: env.APP_PORT || 8000,
+	frontPort: env.FRONT_PORT || 3000,
+	status: env.APP_ENV,
+};
+
 export const secrets = [...env.SESSION_SECRET];

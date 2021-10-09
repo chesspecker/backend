@@ -5,7 +5,8 @@
 	"type": "module",
 	"scripts": {
 		"lint": "xo --fix",
-		"test": "xo"
+		"test": "xo",
+		"start": "nodemon ./app.js"
 	},
 	"prettier": "prettier-config-xo",
 	"xo": {
@@ -13,7 +14,8 @@
 	},
 	"devDependencies": {
 		"prettier-config-xo": "^2.0.0",
-		"xo": "^0.45.0"
+		"xo": "^0.45.0",
+		"nodemon": "^2.0.13"
 	},
 	"dependencies": {
 		"connect-mongo": "^4.6.0",
@@ -21,6 +23,7 @@
 		"dotenv": "^10.0.0",
 		"express": "^4.17.1",
 		"express-session": "^1.17.2",
+		"mongoose": "^6.0.10",
 		"node-fetch": "^3.0.0"
 	}
 }

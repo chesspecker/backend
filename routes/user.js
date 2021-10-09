@@ -1,15 +1,7 @@
 import {Router} from 'express';
-import {auth} from '../config/config.js';
-import fetch from 'node-fetch';
+import {getLichessUser} from '../utils/get-lichess-user.js';
 
 const router = new Router();
-
-const getLichessUser = async accessToken =>
-	fetch('https://lichess.org/api/account', {
-		headers: {
-			Authorization: `Bearer ${accessToken}`,
-		},
-	}).then(response => response.json());
 
 router.get('/', async (request, response) => {
 	if (request.session.token) {
