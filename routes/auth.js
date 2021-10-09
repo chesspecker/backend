@@ -1,12 +1,8 @@
-/* eslint-disable camelcase */
 import {createHash, randomBytes} from 'node:crypto';
 import {Router} from 'express';
 import {auth, config} from '../config/config.js';
 import {User} from '../models/user-model.js';
-import {
-	getLichessUser,
-	getLichessUserEmail,
-} from '../utils/get-lichess-user.js';
+import getLichessData from '../utils/get-lichess-data.js';
 import getLichessToken from '../utils/get-lichess-token.js';
 
 const router = new Router();
@@ -31,17 +27,15 @@ router.get('/login', async (request, response) => {
 	const verifier = createVerifier();
 	const challenge = createChallenge(verifier);
 	request.session.codeVerifier = verifier;
-	response.redirect(
-		'https://lichess.org/oauth?' +
-			new URLSearchParams({
-				response_type: 'code',
-				client_id: clientId,
-				redirect_uri: `${url}/auth/callback`,
-				scope: 'preference:read email:read',
-				code_challenge_method: 'S256',
-				code_challenge: challenge,
-			}),
-	);
+	const linkParameters = new URLSearchParams({
+		response_type: 'code',
+		client_id: clientId,
+		redirect_uri: `${url}/auth/callback`,
+		scope: 'preference:read email:read',
+		code_challenge_method: 'S256',
+		code_challenge: challenge,
+	});
+	response.redirect(302, `https://lichess.org/oauth?${linkParameters}`);
 });
 
 router.get('/callback', async (request, response) => {
@@ -57,16 +51,10 @@ router.get('/callback', async (request, response) => {
 		return;
 	}
 
-	const redirectUrl =
-		config.status === 'prod'
-			? 'https://www.chesspecker.com'
-			: `http://localhost:${config.frontPort}`;
-
 	const oauthToken = lichessToken.access_token;
 	request.session.token = oauthToken;
-	const lichessUser = await getLichessUser(oauthToken);
-	const data = await getLichessUserEmail(oauthToken);
-	const userMail = data.email;
+	const lichessUser = await getLichessData(oauthToken);
+	const {email: userMail} = await getLichessData(oauthToken, 'email');
 
 	const [isAlreadyUsedId, isAlreadyUsedEmail] = await Promise.all([
 		User.exists({id: lichessUser.id}),
@@ -75,7 +63,7 @@ router.get('/callback', async (request, response) => {
 	const userExists = isAlreadyUsedId || isAlreadyUsedEmail;
 	if (userExists) {
 		console.log('User already in db');
-		response.redirect(302, `${redirectUrl}/success-login`);
+		response.redirect(302, `${url}/success-login`);
 	} else {
 		const user = new User();
 		user.id = lichessUser.id;
@@ -121,8 +109,22 @@ router.get('/callback', async (request, response) => {
 			console.log('saved !');
 		});
 
-		response.redirect(302, `${redirectUrl}/success-login`);
+		response.redirect(302, `${url}/success-login`);
 	}
+});
+
+router.get('/logout', (request, response) => {
+	const url =
+		config.status === 'prod'
+			? 'https://www.chesspecker.com'
+			: `http://localhost:${config.frontPort}`;
+	request.session.destroy(error => {
+		if (error) {
+			return console.log(error);
+		}
+
+		response.redirect(url);
+	});
 });
 
 export default router;

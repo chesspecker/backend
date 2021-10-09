@@ -9,6 +9,10 @@ export const db = {
 	debug: env.DB_DEBUG,
 };
 
+export const redisConfig = {
+	uri: env.REDIS_URI,
+};
+
 export const auth = {
 	LICHESS_CLIENT_ID: env.LICHESS_CLIENT_ID,
 	LICHESS_CLIENT_SECRET: env.LICHESS_CLIENT_SECRET,

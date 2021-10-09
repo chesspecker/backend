@@ -1,11 +1,11 @@
 import {Router} from 'express';
-import {getLichessUser} from '../utils/get-lichess-user.js';
+import getLichessData from '../utils/get-lichess-data.js';
 
 const router = new Router();
 
 router.get('/', async (request, response) => {
 	if (request.session.token) {
-		const lichessUser = await getLichessUser(request.session.token);
+		const lichessUser = await getLichessData(request.session.token);
 
 		response.json({name: lichessUser.username});
 	} else {

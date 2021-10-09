@@ -2,13 +2,12 @@ import process from 'node:process';
 import express, {json} from 'express';
 import cors from 'cors';
 import session from 'express-session';
-import MongoStore from 'connect-mongo';
-import {config, secrets, db} from '../config/config.js';
+import connectRedis from 'connect-redis';
+import {config, secrets} from '../config/config.js';
 import auth from '../routes/auth.js';
 import user from '../routes/user.js';
-
-const app = express();
-app.use(json());
+import games from '../routes/games.js';
+import createClient from './redis.js';
 
 const corsOptions = {
 	origin: [
@@ -29,34 +28,39 @@ const corsOptions = {
 	optionsSuccessStatus: 200,
 };
 
-app.use(cors(corsOptions));
-
-const storeOptions = {mongoUrl: db.url, dbName: db.name};
-
+const ONE_WEEK = 1000 * 60 * 60 * 24 * 7;
 const sessionOptions = {
+	name: 'chesspecker-sessions',
 	resave: true,
-	cookie: {
-		httpOnly: true,
-		maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week
-	},
 	secret: secrets,
-	saveUninitialized: false,
+	saveUninitialized: true,
+	cookie: {
+		secure: false,
+		httpOnly: false,
+		maxAge: ONE_WEEK,
+	},
 };
 
 if (config.status === 'prod') {
-	sessionOptions.store = MongoStore.create(storeOptions);
+	const RedisStore = connectRedis(session);
+	const client = createClient();
 	sessionOptions.cookie.domain = 'chesspecker.com';
+	sessionOptions.cookie.secure = true;
+	sessionOptions.store = new RedisStore({client});
 }
 
+const app = express();
+app.set('trust proxy', 1);
+app.use(json());
+app.use(cors(corsOptions));
 app.use(session(sessionOptions));
 app.use('/auth', auth);
 app.use('/user', user);
+app.use('/games', games);
 
 export const start = () => {
 	app.listen(config.port, error => {
-		if (error) {
-			throw error;
-		}
+		if (error) throw error;
 
 		console.log(`Server started! pid: ${process.pid} and port: ${config.port}`);
 	});
