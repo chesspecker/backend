@@ -21,6 +21,7 @@
 		"xo": "^0.45.0"
 	},
 	"dependencies": {
+		"bullmq": "^1.49.0",
 		"connect-mongo": "^4.6.0",
 		"connect-redis": "^6.0.0",
 		"cors": "^2.8.5",
@@ -30,6 +31,7 @@
 		"ioredis": "^4.27.10",
 		"mongoose": "^6.0.10",
 		"ndjson": "^2.0.0",
-		"node-fetch": "^3.0.0"
+		"node-fetch": "^3.0.0",
+		"uuid": "^8.3.2"
 	}
 }

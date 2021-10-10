@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import {User} from '../models/user-model.js';
 
 const {Schema} = mongoose;
 
@@ -55,8 +56,8 @@ const gameDefinition = new Schema({
 	analyzed: Boolean,
 });
 
-export const gameSchema = new mongoose.Schema(gameDefinition);
-export const Game = mongoose.model('Game', gameSchema);
+const gameSchema = new mongoose.Schema(gameDefinition);
+const Game = mongoose.model('Game', gameSchema);
 
 const gameModel = {
 	definition: gameDefinition,
@@ -64,4 +65,19 @@ const gameModel = {
 	model: Game,
 };
 
-export default gameModel;
+gameSchema.pre('save', async next => {
+	try {
+		const objectId = new mongoose.Types.ObjectId(this.user);
+		console.log(objectId);
+		const user = await User.findOneAndUpdate(
+			{_id: objectId},
+			{$inc: {gamesInDb: 1}},
+		);
+		console.log(user);
+		return next();
+	} catch (error) {
+		return next(error);
+	}
+});
+
+export {gameSchema, Game, gameModel};

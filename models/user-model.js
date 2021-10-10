@@ -22,10 +22,12 @@ export const userDefinition = new Schema({
 		classical: {games: Number, rating: Number},
 		correspondence: {games: Number, rating: Number},
 	},
+	gamesInDb: Number,
+	puzzlesInDb: Number,
 });
 
-export const userSchema = new mongoose.Schema(userDefinition);
-export const User = mongoose.model('User', userSchema);
+const userSchema = new mongoose.Schema(userDefinition);
+const User = mongoose.model('User', userSchema);
 
 const userModel = {
 	definition: userDefinition,
@@ -33,4 +35,4 @@ const userModel = {
 	model: User,
 };
 
-export default userModel;
+export {userSchema, User, userModel};
