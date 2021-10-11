@@ -39,36 +39,33 @@ router.get('/login', async (request, response) => {
 	}
 });
 
-router.get('/callback', async (request, response) => {
+router.get('/callback', async (request, response, next) => {
 	const verifier = request.session.codeVerifier;
 	const lichessToken = await getLichessToken(request.query.code, verifier);
 
 	if (!lichessToken.access_token) {
-		response.send('Failed getting token');
-		return;
+		return next(new Error('Failed getting token'));
 	}
 
 	const oauthToken = lichessToken.access_token;
-	request.session.token = oauthToken;
 	const lichessUser = await getLichessData(oauthToken);
+	request.session.token = oauthToken;
+	request.session.userID = lichessUser.id;
+	request.session.username = lichessUser.username;
 	const {email: userMail} = await getLichessData(oauthToken, '/email');
 	const [isAlreadyUsedId, isAlreadyUsedEmail] = await Promise.all([
 		User.exists({id: lichessUser.id}),
 		User.exists({email: userMail}),
 	]);
 	const userExists = isAlreadyUsedId || isAlreadyUsedEmail;
-	if (userExists) {
-		console.log('User already in db');
-		response.redirect(302, `${siteRedirectUrl}/success-login`);
-	} else {
+	if (!userExists) {
 		const user = generateUser(lichessUser, userMail);
 		user.save(error => {
-			if (error) throw new Error(error);
-			console.log('saved !');
+			if (error) return next(error);
 		});
-
-		response.redirect(302, `${siteRedirectUrl}/success-login`);
 	}
+
+	response.redirect(302, `${siteRedirectUrl}/success-login`);
 });
 
 router.get('/logout', (request, response) => {

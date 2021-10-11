@@ -1,15 +1,11 @@
 import {Router} from 'express';
-import getLichessData from '../utils/get-lichess-data.js';
+import sessionValidator from '../utils/session-validator.js';
 
 const router = new Router();
 
-router.get('/', async (request, response) => {
-	if (request.session.token) {
-		const lichessUser = await getLichessData(request.session.token);
-		response.json({name: lichessUser.username});
-	} else {
-		response.status(401).json({reason: 'No session cookie found'});
-	}
+router.get('/', sessionValidator, async (request, response) => {
+	const {userID} = request.session;
+	response.json({name: userID});
 });
 
 export default router;

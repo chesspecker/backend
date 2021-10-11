@@ -1,4 +1,5 @@
 import process from 'node:process';
+import {createServer} from 'node:http';
 import express, {json} from 'express';
 import cors from 'cors';
 import session from 'express-session';
@@ -7,7 +8,10 @@ import {config, secrets} from '../config/config.js';
 import auth from '../routes/auth.js';
 import user from '../routes/user.js';
 import games from '../routes/games.js';
+import worker from '../routes/worker.js';
+import errorHandlerMiddleware from '../middlewares/error-handler.js';
 import createClient from './redis.js';
+import SocketService from './socket-io.js';
 
 const corsOptions = {
 	origin: [
@@ -51,18 +55,28 @@ if (config.status === 'prod') {
 }
 
 const app = express();
+
+const httpServer = createServer(app);
+app.set('socketio', SocketService.initialize(httpServer));
 app.set('trust proxy', 1);
+
 app.use(json());
 app.use(cors(corsOptions));
 app.use(session(sessionOptions));
+
 app.use('/auth', auth);
 app.use('/user', user);
 app.use('/games', games);
+app.use('/worker', worker);
+
+app.use(errorHandlerMiddleware);
+app.use((_request, response) => {
+	response.status(404).send('404 not found');
+});
 
 export const start = () => {
-	app.listen(config.port, error => {
+	httpServer.listen(config.port, error => {
 		if (error) throw error;
-
 		console.log(`Server started! pid: ${process.pid} and port: ${config.port}`);
 	});
 };
