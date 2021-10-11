@@ -65,7 +65,7 @@ const gameModel = {
 	model: Game,
 };
 
-gameSchema.pre('save', async next => {
+gameSchema.post('save', async next => {
 	try {
 		const objectId = new mongoose.Types.ObjectId(this.user);
 		console.log(objectId);

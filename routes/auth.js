@@ -1,6 +1,6 @@
 import {createHash, randomBytes} from 'node:crypto';
 import {Router} from 'express';
-import {auth, config} from '../config/config.js';
+import {auth, siteUrl, siteRedirectUrl} from '../config/config.js';
 import {User} from '../models/user-model.js';
 import getLichessData from '../utils/get-lichess-data.js';
 import getLichessToken from '../utils/get-lichess-token.js';
@@ -21,35 +21,27 @@ const createVerifier = () => base64URLEncode(randomBytes(32));
 const createChallenge = verifier => base64URLEncode(sha256(verifier));
 
 router.get('/login', async (request, response) => {
-	const url =
-		config.status === 'prod'
-			? `https://api.chesspecker.com`
-			: `http://localhost:${config.port}`;
-	const verifier = createVerifier();
-	const challenge = createChallenge(verifier);
-	request.session.codeVerifier = verifier;
-	const linkParameters = new URLSearchParams({
-		response_type: 'code',
-		client_id: clientId,
-		redirect_uri: `${url}/auth/callback`,
-		scope: 'preference:read email:read',
-		code_challenge_method: 'S256',
-		code_challenge: challenge,
-	});
-	response.redirect(302, `https://lichess.org/oauth?${linkParameters}`);
+	if (request.session.token) {
+		response.redirect(302, `${siteRedirectUrl}/success-login`);
+	} else {
+		const verifier = createVerifier();
+		const challenge = createChallenge(verifier);
+		request.session.codeVerifier = verifier;
+		const linkParameters = new URLSearchParams({
+			response_type: 'code',
+			client_id: clientId,
+			redirect_uri: `${siteUrl}/auth/callback`,
+			scope: 'preference:read email:read',
+			code_challenge_method: 'S256',
+			code_challenge: challenge,
+		});
+		response.redirect(302, `https://lichess.org/oauth?${linkParameters}`);
+	}
 });
 
 router.get('/callback', async (request, response) => {
-	const url =
-		config.status === 'prod'
-			? `https://api.chesspecker.com`
-			: `http://localhost:${config.port}`;
-	const redirectUrl =
-		config.status === 'prod'
-			? 'https://www.chesspecker.com'
-			: `http://localhost:${config.frontPort}`;
 	const verifier = request.session.codeVerifier;
-	const lichessToken = await getLichessToken(request.query.code, verifier, url);
+	const lichessToken = await getLichessToken(request.query.code, verifier);
 
 	if (!lichessToken.access_token) {
 		response.send('Failed getting token');
@@ -67,7 +59,7 @@ router.get('/callback', async (request, response) => {
 	const userExists = isAlreadyUsedId || isAlreadyUsedEmail;
 	if (userExists) {
 		console.log('User already in db');
-		response.redirect(302, `${redirectUrl}/success-login`);
+		response.redirect(302, `${siteRedirectUrl}/success-login`);
 	} else {
 		const user = generateUser(lichessUser, userMail);
 		user.save(error => {
@@ -75,21 +67,17 @@ router.get('/callback', async (request, response) => {
 			console.log('saved !');
 		});
 
-		response.redirect(302, `${url}/success-login`);
+		response.redirect(302, `${siteRedirectUrl}/success-login`);
 	}
 });
 
 router.get('/logout', (request, response) => {
-	const redirectUrl =
-		config.status === 'prod'
-			? 'https://www.chesspecker.com'
-			: `http://localhost:${config.frontPort}`;
 	request.session.destroy(error => {
 		if (error) {
 			return console.log(error);
 		}
 
-		response.redirect(302, redirectUrl);
+		response.redirect(302, siteRedirectUrl);
 	});
 });
 

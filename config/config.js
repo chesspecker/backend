@@ -25,3 +25,13 @@ export const config = {
 };
 
 export const secrets = [...env.SESSION_SECRET];
+
+export const siteUrl =
+	env.APP_ENV === 'prod'
+		? `https://api.chesspecker.com`
+		: `http://localhost:${config.port}`;
+
+export const siteRedirectUrl =
+	env.APP_ENV === 'prod'
+		? 'https://www.chesspecker.com'
+		: `http://localhost:${config.frontPort}`;

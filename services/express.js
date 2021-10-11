@@ -14,7 +14,8 @@ const corsOptions = {
 		'https://chesspecker.com',
 		'https://api.chesspecker.com',
 		'https://www.chesspecker.com',
-		'http://localhost:3000',
+		`http://localhost:${config.port}`,
+		`http://localhost:${config.frontPort}`,
 	],
 	methods: ['GET', 'POST', 'DELETE', 'PUT', 'OPTIONS'],
 	allowedHeaders: [
@@ -43,7 +44,7 @@ const sessionOptions = {
 
 if (config.status === 'prod') {
 	const RedisStore = connectRedis(session);
-	const client = createClient();
+	const client = createClient('sessions');
 	sessionOptions.cookie.domain = 'chesspecker.com';
 	sessionOptions.cookie.secure = true;
 	sessionOptions.store = new RedisStore({client});

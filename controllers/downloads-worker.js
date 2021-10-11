@@ -5,29 +5,28 @@ import createClient from '../services/redis.js';
 import {Game} from '../models/game-model.js';
 import generateGame from './game-generator.js';
 
-const connection = createClient();
+export const connection = createClient('downloads worker');
 const settings = {lockDuration: 300_000, maxStalledCount: 0};
 const limiter = {max: 30};
 const downloadsQueue = new Queue('downloads', {connection, limiter, settings});
+const percent = (progress, max) => `${Math.round((progress / max) * 100)}%`;
 
 const worker = new Worker(
 	'downloads',
 	async job => {
 		const {url, token, username, max} = job.data;
+		let progress = 0;
 		const responseStream = await fetch(url, {
 			headers: {
 				Accept: 'application/x-ndjson',
 				Authorization: `Bearer ${token}`,
 			},
 		});
-		let progress = 0;
-		const percent = (progress, max) =>
-			`${Math.round((progress / max) * 100)}%`;
 		responseStream.body
 			.pipe(ndjson.parse())
 			.on('data', async current => {
 				const isInDB = await Game.exists({game_id: current.id});
-				if (isInDB === true) {
+				if (isInDB) {
 					// Check if another player played it
 					console.log('Game : ' + current.id + ' is in db');
 					job.updateProgress(percent(progress++, max));
@@ -66,10 +65,6 @@ worker.on('failed', (job, error) => {
 	console.log(`${job.id} has failed with ${error.message}`);
 });
 
-console.log('Worker is ready');
-
-downloadsQueue.on('stalled', function (job) {
-	console.log('Job %s is stalled', job.jobId);
-});
+downloadsQueue.on('active', job => console.log(`${job.jobId} has activated!`));
 
 export {downloadsQueue};

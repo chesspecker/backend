@@ -3,6 +3,7 @@ import {v4 as uuidv4} from 'uuid';
 import {User} from '../models/user-model.js';
 import getLichessData from '../utils/get-lichess-data.js';
 import {downloadsQueue} from '../controllers/downloads-worker.js';
+import {analysisQueue} from '../controllers/analysis-worker.js';
 
 const router = new Router();
 
@@ -45,10 +46,15 @@ router.get('/download', async (request, response) => {
 	}
 });
 
-router.get('/analyze', async (request, response) => {
+router.get('/analysis', async (request, response) => {
 	if (request.session.token) {
-		const lichessUser = await getLichessData(request.session.token);
-		response.json(lichessUser);
+		const token = request.session.token;
+		const lichessUser = await getLichessData(token);
+		const jobOptions = {token, lichessUser};
+		analysisQueue.add(uuidv4(), jobOptions).then(
+			job => response.status(201).end(job.name),
+			error => response.status(500).end(error),
+		);
 	} else {
 		response.end();
 	}

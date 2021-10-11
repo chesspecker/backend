@@ -1,0 +1,3 @@
+[submodule "packages/tactics-generator"]
+	path = packages/tactics-generator
+	url = git@github.com:pnxdxt/pgn-tactics-generator.git
