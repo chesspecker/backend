@@ -14,7 +14,7 @@ export default function generateUser(lichessUser, userMail) {
 		rated: lichessUser.count.rated,
 	};
 
-	if (lichessUser.perfs?.ultraBullet) {
+	if (lichessUser.perfs.ultraBullet) {
 		user.perfs = {
 			ultraBullet: {
 				games: lichessUser.perfs.ultraBullet.games,
@@ -23,7 +23,7 @@ export default function generateUser(lichessUser, userMail) {
 		};
 	}
 
-	if (lichessUser.perfs?.bullet) {
+	if (lichessUser.perfs.bullet) {
 		user.perfs = {
 			bullet: {
 				games: lichessUser.perfs.bullet.games,
@@ -32,7 +32,7 @@ export default function generateUser(lichessUser, userMail) {
 		};
 	}
 
-	if (lichessUser.perfs?.blitz) {
+	if (lichessUser.perfs.blitz) {
 		user.perfs = {
 			blitz: {
 				games: lichessUser.perfs.blitz.games,
@@ -41,7 +41,7 @@ export default function generateUser(lichessUser, userMail) {
 		};
 	}
 
-	if (lichessUser.perfs?.rapid) {
+	if (lichessUser.perfs.rapid) {
 		user.perfs = {
 			rapid: {
 				games: lichessUser.perfs.rapid.games,
@@ -50,7 +50,7 @@ export default function generateUser(lichessUser, userMail) {
 		};
 	}
 
-	if (lichessUser.perfs?.classical) {
+	if (lichessUser.perfs.classical) {
 		user.perfs = {
 			classical: {
 				games: lichessUser.perfs.classical.games,
@@ -59,7 +59,7 @@ export default function generateUser(lichessUser, userMail) {
 		};
 	}
 
-	if (lichessUser.perfs?.correspondence) {
+	if (lichessUser.perfs.correspondence) {
 		user.perfs = {
 			correspondence: {
 				games: lichessUser.perfs.correspondence.games,

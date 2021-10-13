@@ -58,21 +58,15 @@ const gameDefinition = new Schema({
 });
 
 const gameSchema = new mongoose.Schema(gameDefinition);
-const Game = mongoose.model('Game', gameSchema);
 
 gameSchema.pre('save', async function (next) {
 	try {
-		const objectId = new mongoose.Types.ObjectId(this.user);
-		console.log(objectId);
-		const user = await User.findOneAndUpdate(
-			{_id: objectId},
-			{$inc: {gamesInDb: 1}},
-		);
-		console.log(user);
+		await User.findOneAndUpdate({_id: this.user}, {$inc: {gamesInDb: 1}});
 		return next();
 	} catch (error) {
 		return next(error);
 	}
 });
 
+const Game = mongoose.model('Game', gameSchema);
 export {Game};

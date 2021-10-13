@@ -43,15 +43,16 @@ router.get('/download', sessionValidator, async (request, response, next) => {
 	const jobOptions = {jobId};
 	request.session.jobId = jobId;
 	const io = SocketService.getInstance();
-	io.on('connection', socket => {
-		console.log('connected with id: ' + socket.id);
-		const socketId = socket.id;
-		request.session.socketId = socketId;
-		downloadsQueue.add(jobId, jobData, jobOptions).then(
-			job => response.status(201).send({status: 'success', id: job.name}),
-			error => next(error),
-		);
-	});
+	return new Promise((resolve, reject) => {
+		io.on('connection', socket => {
+			console.log('connected with id: ' + socket.id);
+			const socketId = socket.id;
+			request.session.socketId = socketId;
+			downloadsQueue.add(jobId, jobData, jobOptions).then(resolve, reject);
+		});
+	})
+		.then(response.status(201).send({status: 'success'}))
+		.catch(error => next(error));
 });
 
 router.get('/analysis', sessionValidator, async (request, response, next) => {

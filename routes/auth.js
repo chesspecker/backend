@@ -51,7 +51,7 @@ router.get('/callback', async (request, response, next) => {
 	const lichessUser = await getLichessData(oauthToken);
 	request.session.token = oauthToken;
 	request.session.userID = lichessUser.id;
-	request.session.username = lichessUser.username.toLowerCase();
+	request.session.username = lichessUser.username;
 	const {email: userMail} = await getLichessData(oauthToken, '/email');
 	const [isAlreadyUsedId, isAlreadyUsedEmail] = await Promise.all([
 		User.exists({id: lichessUser.id}),

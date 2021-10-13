@@ -21,22 +21,19 @@ const worker = new Worker(
 		let count = 0;
 		let progress = 0;
 
-		const responseStream = await fetch(url, {
+		fetch(url, {
 			headers: {
 				Accept: 'application/x-ndjson',
 				Authorization: `Bearer ${token}`,
 			},
-		});
-
-		if (responseStream.status === 429) throw new Error('Too many requests');
-
-		const processingGames = () =>
-			new Promise((resolve, reject) => {
+		}).then(responseStream => {
+			if (responseStream.status === 429) throw new Error('Too many requests');
+			return new Promise((resolve, reject) => {
 				responseStream.body
 					.pipe(ndjson.parse())
 					.on('data', async current => {
-						const {session} = job.data;
-						const {socketId} = session;
+						responseStream.body.pause();
+						const {socketId} = job.data.session;
 						const isInDB = await Game.exists({game_id: current.id});
 						if (isInDB) {
 							/**
@@ -45,6 +42,7 @@ const worker = new Worker(
 							count++;
 							progress = (count / max).toFixed(2);
 							job.updateProgress({count, max, progress, socketId});
+							responseStream.body.resume();
 						} else {
 							const game = await generateGame(current, username);
 							await game.populate('user');
@@ -54,22 +52,22 @@ const worker = new Worker(
 							count++;
 							progress = (count / max).toFixed(2);
 							job.updateProgress({count, max, progress, socketId});
+							responseStream.body.resume();
 						}
 					})
-					.on('finish', resolve)
+					.on('end', resolve)
 					.on('error', reject);
-			});
-
-		processingGames()
-			.then(() => {
-				console.timeEnd(`🦊 JOB[${job.id}]::TIME:`);
-				console.log(`🦊 JOB[${job.id}]::SUCCESS`);
-				return 'done';
 			})
-			.catch(error => {
-				console.log(`🦊 JOB[${job.id}]::FAIL`);
-				console.error(error);
-			});
+				.then(() => {
+					console.timeEnd(`🦊 JOB[${job.id}]::TIME:`);
+					console.log(`🦊 JOB[${job.id}]::SUCCESS`);
+					return 'done';
+				})
+				.catch(error => {
+					console.log(`🦊 JOB[${job.id}]::FAIL`);
+					console.error(error);
+				});
+		});
 	},
 	{connection},
 );

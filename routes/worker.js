@@ -1,20 +1,24 @@
 import {Router} from 'express';
-import {downloadsQueue} from '../controllers/downloads-worker.js';
+import {worker} from '../controllers/downloads-worker.js';
+import sessionValidator from '../middlewares/session-validator.js';
 
 const router = new Router();
 
-router.get('/', async (request, response) => {
-	if (request.session.jobId) {
-		const jobId = request.session.jobId;
-		const jobProgress = request.session.progress;
+let count;
+let max;
+let progress;
+let jobId;
 
-		const job = await downloadsQueue.getJob(jobId);
-		if (job === undefined) response.send('no worker found');
+worker.on('progress', (job, data) => {
+	count = data.count;
+	max = data.max;
+	progress = data.progress;
+	jobId = job.id;
+});
 
-		const jobState = await job.getState();
-		response.send({jobState, jobProgress});
-	} else {
-		response.send('no worker found');
+router.get('/', sessionValidator, async (request, response) => {
+	if (request.session.jobId === jobId) {
+		response.send({count, max, progress});
 	}
 });
 
