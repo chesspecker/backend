@@ -23,7 +23,7 @@ TODO:
 - [x] Manage workers and queues using BullMq
 - [ ] Allow only one worker by user at a time
 - [ ] Send workers progress to client with get request
-- [ ] Send workers progress to client with web socket
+- [x] Send workers progress to client with web socket
 - [x] Check if game is already saved
 - [ ] Check if game was saved for another user
 - [x] Save game to MongoDB with Mongoose

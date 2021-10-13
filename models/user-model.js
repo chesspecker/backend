@@ -24,15 +24,10 @@ export const userDefinition = new Schema({
 	},
 	gamesInDb: Number,
 	puzzlesInDb: Number,
+	puzzleSet: [{type: Schema.Types.ObjectId, ref: 'PuzzleSet'}],
 });
 
 const userSchema = new mongoose.Schema(userDefinition);
 const User = mongoose.model('User', userSchema);
 
-const userModel = {
-	definition: userDefinition,
-	schema: userSchema,
-	model: User,
-};
-
-export {userSchema, User, userModel};
+export {User};

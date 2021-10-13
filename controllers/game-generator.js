@@ -3,10 +3,19 @@ import {User} from '../models/user-model.js';
 
 export default async function generateGame(item, username) {
 	let color;
+	let user;
 	if (item.players.white.user.name.toLowerCase() === username) color = 'white';
 	if (item.players.black.user.name.toLowerCase() === username) color = 'black';
 
-	const user = await User.findOne({id: username});
+	try {
+		user = await User.findOne({username});
+	} catch (error) {
+		throw error;
+	}
+
+	if (user === null) throw new Error('User not found');
+	if (user === undefined) throw new Error('User not found');
+
 	const gameObject = {
 		game_id: item.id,
 		color,

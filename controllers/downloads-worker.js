@@ -20,67 +20,65 @@ const worker = new Worker(
 		console.time(`🦊 JOB[${job.id}]::TIME:`);
 		let count = 0;
 		let progress = 0;
-		try {
-			const responseStream = await fetch(url, {
-				headers: {
-					Accept: 'application/x-ndjson',
-					Authorization: `Bearer ${token}`,
-				},
+
+		const responseStream = await fetch(url, {
+			headers: {
+				Accept: 'application/x-ndjson',
+				Authorization: `Bearer ${token}`,
+			},
+		});
+
+		if (responseStream.status === 429) throw new Error('Too many requests');
+
+		const processingGames = () =>
+			new Promise((resolve, reject) => {
+				responseStream.body
+					.pipe(ndjson.parse())
+					.on('data', async current => {
+						const {session} = job.data;
+						const {socketId} = session;
+						const isInDB = await Game.exists({game_id: current.id});
+						if (isInDB) {
+							/**
+							 * Check if another player played it before ?
+							 */
+							count++;
+							progress = (count / max).toFixed(2);
+							job.updateProgress({count, max, progress, socketId});
+						} else {
+							const game = await generateGame(current, username);
+							await game.populate('user');
+							await game.save(error => {
+								if (error) throw new Error(error);
+							});
+							count++;
+							progress = (count / max).toFixed(2);
+							job.updateProgress({count, max, progress, socketId});
+						}
+					})
+					.on('finish', resolve)
+					.on('error', reject);
 			});
-			if (responseStream.status === 429) throw new Error('Too many requests');
-			responseStream.body
-				.pipe(ndjson.parse())
-				.on('data', async current => {
-					const {session} = job.data;
-					const {socketId} = session;
-					const isInDB = await Game.exists({game_id: current.id});
-					if (isInDB) {
-						/**
-						 * Check if another player played it before ?
-						 */
-						count++;
-						progress = (count / max).toFixed(2);
-						job.updateProgress({progress, socketId});
-					} else {
-						const game = await generateGame(current, username);
-						await game.populate('user');
-						await game.save(error => {
-							if (error) throw new Error(error);
-						});
-						count++;
-						progress = (count / max).toFixed(2);
-						job.updateProgress({progress, socketId});
-					}
-				})
-				.on('pause', () => {
-					console.log('pause');
-				})
-				.on('end', () => {
-					console.log('end');
-					console.timeEnd(`🦊 JOB[${job.id}]::TIME:`);
-					console.log(`🦊 JOB[${job.id}]::SUCCESS`);
-					return 'done';
-				})
-				.on('error', error => {
-					console.log(error);
-				});
-		} catch (error) {
-			console.timeEnd(`🦊 JOB[${job.id}]::TIME:`);
-			console.log(`🦊 JOB[${job.id}]::FAIL`);
-			throw error;
-		}
+
+		processingGames()
+			.then(() => {
+				console.timeEnd(`🦊 JOB[${job.id}]::TIME:`);
+				console.log(`🦊 JOB[${job.id}]::SUCCESS`);
+				return 'done';
+			})
+			.catch(error => {
+				console.log(`🦊 JOB[${job.id}]::FAIL`);
+				console.error(error);
+			});
 	},
 	{connection},
 );
 
 console.log(`🦊 WORKER STARTED`);
 
-worker.on('progress', (job, {progress, socketId}) => {
-	/**
-	 * Check if websocket is open, send progress
-	 */
+worker.on('progress', (job, {count, max, progress, socketId}) => {
 	const io = SocketService.getInstance();
-	io.to(socketId).emit('FromAPI', progress);
+	io.to(socketId).emit('FromAPI', {count, max, progress});
 	console.log(`${job.id} sent to ${socketId} progress : ${progress}`);
 });
 
@@ -93,12 +91,5 @@ worker.on('failed', (job, error) => {
 });
 
 downloadsQueue.on('active', job => console.log(`${job.jobId} has activated!`));
-downloadsQueue.on('completed', job => {
-	const io = SocketService.getInstance();
-	io.on('connection', socket => {
-		socket.emit('FromAPI', `${job.jobId} has activated!`);
-	});
-	console.log(`${job.jobId} has activated!`);
-});
 
 export {downloadsQueue, worker};

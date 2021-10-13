@@ -51,7 +51,7 @@ router.get('/callback', async (request, response, next) => {
 	const lichessUser = await getLichessData(oauthToken);
 	request.session.token = oauthToken;
 	request.session.userID = lichessUser.id;
-	request.session.username = lichessUser.username;
+	request.session.username = lichessUser.username.toLowerCase();
 	const {email: userMail} = await getLichessData(oauthToken, '/email');
 	const [isAlreadyUsedId, isAlreadyUsedEmail] = await Promise.all([
 		User.exists({id: lichessUser.id}),
@@ -68,12 +68,9 @@ router.get('/callback', async (request, response, next) => {
 	response.redirect(302, `${siteRedirectUrl}/success-login`);
 });
 
-router.get('/logout', (request, response) => {
+router.get('/logout', (request, response, next) => {
 	request.session.destroy(error => {
-		if (error) {
-			return console.log(error);
-		}
-
+		if (error) return next(error);
 		response.redirect(302, siteRedirectUrl);
 	});
 });

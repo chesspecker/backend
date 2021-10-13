@@ -1,5 +1,5 @@
 import {Router} from 'express';
-import sessionValidator from '../utils/session-validator.js';
+import sessionValidator from '../middlewares/session-validator.js';
 
 const router = new Router();
 

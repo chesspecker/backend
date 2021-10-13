@@ -10,7 +10,9 @@ const analysisQueue = new Queue('analysis', {connection, limiter, settings});
 const worker = new Worker(
 	'analysis',
 	async job => {
-		console.log(job.data);
+		console.log(`*****************`);
+		console.log(`🐼 JOB[${job.id}]::START`);
+		console.time(`🐼 JOB[${job.id}]::TIME:`);
 		// Spawn new child process to call the python script
 		const python = spawn('python3', ['../packages/tactics-generator/main.py']);
 		// Collect data from script
@@ -22,9 +24,13 @@ const worker = new Worker(
 		python.on('close', code => {
 			console.log(`child process close all stdio with code ${code}`);
 		});
+		console.timeEnd(`🐼 JOB[${job.id}]::TIME:`);
+		console.log(`🐼 JOB[${job.id}]::SUCCESS`);
 	},
 	{connection},
 );
+
+console.log(`🐼 WORKER STARTED`);
 
 worker.on('progress', (job, progress) => {
 	console.log(`${job.id} has progress : ${progress}`);

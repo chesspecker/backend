@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 import mongoose from 'mongoose';
 import {User} from '../models/user-model.js';
 
@@ -59,13 +60,7 @@ const gameDefinition = new Schema({
 const gameSchema = new mongoose.Schema(gameDefinition);
 const Game = mongoose.model('Game', gameSchema);
 
-const gameModel = {
-	definition: gameDefinition,
-	schema: gameSchema,
-	model: Game,
-};
-
-gameSchema.post('save', async next => {
+gameSchema.pre('save', async function (next) {
 	try {
 		const objectId = new mongoose.Types.ObjectId(this.user);
 		console.log(objectId);
@@ -80,4 +75,4 @@ gameSchema.post('save', async next => {
 	}
 });
 
-export {gameSchema, Game, gameModel};
+export {Game};

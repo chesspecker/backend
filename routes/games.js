@@ -5,7 +5,7 @@ import {User} from '../models/user-model.js';
 import getLichessData from '../utils/get-lichess-data.js';
 import {downloadsQueue} from '../controllers/downloads-worker.js';
 import {analysisQueue} from '../controllers/analysis-worker.js';
-import sessionValidator from '../utils/session-validator.js';
+import sessionValidator from '../middlewares/session-validator.js';
 import SocketService from '../services/socket-io.js';
 
 const router = new Router();
@@ -24,12 +24,9 @@ router.get('/download', sessionValidator, async (request, response, next) => {
 		perfType: Joi.string(),
 	});
 
-	try {
-		await schema.validateAsync({max, rated, perfType});
-	} catch (error) {
-		error.status = 400;
-		return next(error);
-	}
+	const validationResult = schema.validate({max, rated, perfType});
+	const {error} = validationResult;
+	if (error) return next(error);
 
 	const token = request.session.token;
 	const username = request.session.username;
@@ -40,16 +37,15 @@ router.get('/download', sessionValidator, async (request, response, next) => {
 		pgnInJson: true,
 	});
 
-	const url = ` https://lichess.org/api/games/user/${username}?${linkParameters}`;
+	const url = `https://lichess.org/api/games/user/${username}?${linkParameters}`;
 	const jobData = {url, token, username, max, session: request.session};
 	const jobId = uuidv4();
 	const jobOptions = {jobId};
 	request.session.jobId = jobId;
 	const io = SocketService.getInstance();
-	let socketId;
 	io.on('connection', socket => {
 		console.log('connected with id: ' + socket.id);
-		socketId = socket.id;
+		const socketId = socket.id;
 		request.session.socketId = socketId;
 		downloadsQueue.add(jobId, jobData, jobOptions).then(
 			job => response.status(201).send({status: 'success', id: job.name}),
