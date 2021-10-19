@@ -8,12 +8,6 @@ export const userDefinition = new Schema({
 	url: String,
 	email: String,
 	permissionLevel: Number,
-	createdAt: Number,
-	playTime: Number,
-	count: {
-		all: Number,
-		rated: Number,
-	},
 	perfs: {
 		ultraBullet: {games: Number, rating: Number},
 		bullet: {games: Number, rating: Number},
@@ -21,9 +15,8 @@ export const userDefinition = new Schema({
 		rapid: {games: Number, rating: Number},
 		classical: {games: Number, rating: Number},
 		correspondence: {games: Number, rating: Number},
+		puzzle: {games: Number, rating: Number},
 	},
-	gamesInDb: Number,
-	puzzlesInDb: Number,
 	puzzleSet: [{type: Schema.Types.ObjectId, ref: 'PuzzleSet'}],
 });
 

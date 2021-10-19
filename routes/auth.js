@@ -4,7 +4,7 @@ import {auth, siteUrl, siteRedirectUrl} from '../config/config.js';
 import {User} from '../models/user-model.js';
 import getLichessData from '../utils/get-lichess-data.js';
 import getLichessToken from '../utils/get-lichess-token.js';
-import generateUser from '../controllers/user-generator.js';
+import userGenerator from '../controllers/user-generator.js';
 
 const router = new Router();
 const clientId = auth.LICHESS_CLIENT_ID;
@@ -59,7 +59,7 @@ router.get('/callback', async (request, response, next) => {
 	]);
 	const userExists = isAlreadyUsedId || isAlreadyUsedEmail;
 	if (!userExists) {
-		const user = generateUser(lichessUser, userMail);
+		const user = userGenerator(lichessUser, userMail);
 		user.save(error => {
 			if (error) return next(error);
 		});

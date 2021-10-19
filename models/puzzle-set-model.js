@@ -1,20 +1,13 @@
-/* eslint-disable camelcase */
 import mongoose from 'mongoose';
 
 const {Schema} = mongoose;
 
 const puzzleSetDefinition = new Schema({
-	puzzleSet_id: {
-		type: Number,
-		unique: true,
-		lowercase: true,
-		required: true,
-	},
-	user: [{type: Schema.Types.ObjectId, ref: 'User'}],
+	user: {type: Schema.Types.ObjectId, ref: 'User'},
 	puzzles: [{type: Schema.Types.ObjectId, ref: 'Puzzle'}],
+	name: {type: String},
 	length: {type: Number},
 	tries: {type: Number},
-	successRate: {type: Number},
 	bestTime: {type: Number},
 });
 

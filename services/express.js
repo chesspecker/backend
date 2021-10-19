@@ -7,8 +7,6 @@ import connectRedis from 'connect-redis';
 import {config, secrets} from '../config/config.js';
 import auth from '../routes/auth.js';
 import user from '../routes/user.js';
-import games from '../routes/games.js';
-import worker from '../routes/worker.js';
 import puzzles from '../routes/puzzles.js';
 import healthCheck from '../routes/health-check.js';
 import errorHandlerMiddleware from '../middlewares/error-handler.js';
@@ -67,11 +65,9 @@ app.use(cors(corsOptions));
 app.use(session(sessionOptions));
 
 app.use('/auth', auth);
-app.use('/games', games);
 app.use('/healthCheck', healthCheck);
 app.use('/puzzles', puzzles);
 app.use('/user', user);
-app.use('/worker', worker);
 
 app.use(errorHandlerMiddleware);
 app.use((_request, response) => {
