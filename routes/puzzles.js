@@ -35,12 +35,16 @@ router.post('/sets', sessionValidator, async (request, response, next) => {
 	const puzzleSet = await setGenerator(user, themeArray, size, title);
 	await puzzleSet.populate('user');
 	await puzzleSet.populate('puzzles');
+	let puzzleSetId;
 	puzzleSet.save(async (error, item) => {
 		if (error) return next(error);
-		response.send(item._id);
-		await user.update({$push: {puzzleSet: item._id}});
-		await user.populate('puzzleSet');
-		await user.save()
+		puzzleSetId = item._id;
+		response.send(puzzleSetId);
+	});
+	await user.update({$push: {puzzleSet: puzzleSetId}});
+	await user.populate('puzzleSet');
+	await user.save(async error => {
+		if (error) return next(error);
 	});
 });
 
@@ -52,30 +56,47 @@ router.get('/set/id/:id', sessionValidator, async (request, response, next) => {
 	});
 });
 
-router.put('/set/id/:id', sessionValidator, async (request, response) => {
+router.delete(
+	'/set/id/:id',
+	sessionValidator,
+	async (request, response, next) => {
+		const puzzleSetId = request.params.id;
+		PuzzleSet.deleteOne({_id: puzzleSetId}, error => {
+			if (error) return next(error);
+			return response.send('success');
+		});
+	},
+);
+
+router.put('/set/id/:id', sessionValidator, async (request, response, next) => {
 	const puzzleSetId = request.params.id;
-	let {tries} = request.body;
-	const {title, bestTime} = request.body;
+	const {title, bestTime, tries} = request.body;
+	if (!title && !bestTime && !tries) return response.send('empty');
+
 	const puzzleSet = await PuzzleSet.findById(puzzleSetId);
+
+	const updateBlock = {};
 	if (bestTime && puzzleSet.bestTime === 0) {
-		console.log(bestTime);
+		updateBlock.bestTime = bestTime;
 	}
 
 	if (bestTime && bestTime < puzzleSet.bestTime) {
-		console.log(bestTime);
+		updateBlock.bestTime = bestTime;
 	}
 
 	if (title) {
-		console.log(title);
+		updateBlock.title = title;
 	}
 
 	if (tries) {
-		tries += puzzleSet.tries;
-		console.log(tries);
+		const newTries = tries + puzzleSet.tries;
+		updateBlock.tries = newTries;
 	}
 
-	console.log(puzzleSet);
-	response.send('success');
+	puzzleSet.update({$set: updateBlock}, error => {
+		if (error) return next(error);
+		response.send('success');
+	});
 });
 
 export default router;
