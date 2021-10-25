@@ -13,21 +13,23 @@ const getGrade = options =>
 			: 1
 		: 0;
 
-const spacedRepetition = (grade, puzzleSet) => {
+const spacedRepetition = (grade, currentPuzzle) => {
 	let nextInterval;
 	let nextRepetition;
 	let nextEasinessFactor;
 
 	if (grade >= 3) {
-		if (puzzleSet.repetition === 0) {
+		if (currentPuzzle.repetition === 0) {
 			nextInterval = 1;
 			nextRepetition = 1;
-		} else if (puzzleSet.repetition === 1) {
+		} else if (currentPuzzle.repetition === 1) {
 			nextInterval = 6;
 			nextRepetition = 2;
 		} else {
-			nextInterval = Math.round(puzzleSet.interval * puzzleSet.easinessFactor);
-			nextRepetition = puzzleSet.repetition + 1;
+			nextInterval = Math.round(
+				currentPuzzle.interval * currentPuzzle.easinessFactor,
+			);
+			nextRepetition = currentPuzzle.repetition + 1;
 		}
 	} else {
 		nextInterval = 1;
@@ -35,7 +37,7 @@ const spacedRepetition = (grade, puzzleSet) => {
 	}
 
 	nextEasinessFactor =
-		puzzleSet.easinessFactor +
+		currentPuzzle.easinessFactor +
 		(0.1 - (5 - grade) * (0.08 + (5 - grade) * 0.02));
 
 	if (nextEasinessFactor < 1.3) nextEasinessFactor = 1.3;
@@ -49,8 +51,13 @@ const setUpdater = async function (request, response, next) {
 	if (!title && !bestTime && !tries && !puzzleId) return response.send('empty');
 
 	let puzzleSet;
+	let currentPuzzle;
 	try {
-		puzzleSet = await PuzzleSet.findById(puzzleSetId);
+		puzzleSet = await PuzzleSet.findById(puzzleSetId).exec();
+		const item = await PuzzleSet.findById(puzzleSetId).select({
+			puzzles: {$elemMatch: {_id: puzzleId}},
+		});
+		currentPuzzle = item.puzzles[0];
 	} catch (error) {
 		return next(error);
 	}
@@ -58,7 +65,8 @@ const setUpdater = async function (request, response, next) {
 	const updateBlock = {};
 
 	if (puzzleId) {
-		const newTime = puzzleSet.currentTime + options.timeTaken;
+		const newTime =
+			puzzleSet.currentTime + options.timeTaken + 3 * options.mistakes;
 		const newTotalMistakes = puzzleSet.totalMistakes + options.mistakes;
 		const newTotalPuzzlesPlayed = puzzleSet.totalPuzzlesPlayed + 1;
 		const newAccuracy = 1 - newTotalMistakes / newTotalPuzzlesPlayed;
@@ -66,7 +74,7 @@ const setUpdater = async function (request, response, next) {
 		const grade = getGrade(options);
 		const [nextInterval, nextRepetition, nextEasinessFactor] = spacedRepetition(
 			grade,
-			puzzleSet,
+			currentPuzzle,
 		);
 
 		const updateBlock = {

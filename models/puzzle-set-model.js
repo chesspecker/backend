@@ -7,6 +7,7 @@ const puzzleSetDefinition = new Schema({
 	puzzles: [
 		{
 			_id: {type: Schema.Types.ObjectId, ref: 'Puzzle'},
+			PuzzleId: {type: String},
 			played: {type: Boolean},
 			mistakes: {type: Number},
 			timeTaken: {type: Number},

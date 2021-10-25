@@ -86,16 +86,19 @@ export default async function setGenerator(user, options) {
 	let puzzlesCount = 0;
 
 	const iterateCursor = async query => {
-		const cursor = await Puzzle.find(query, {_id: 1}).exec();
+		const cursor = await Puzzle.find(query, {_id: 1, PuzzleId: 1}).exec();
 		const docArray = shuffle(cursor);
 		for (const doc of docArray) {
 			if (puzzlesCount >= options.size) break;
 			const puzzleToInsert = {
 				_id: doc._id,
+				PuzzleId: doc.PuzzleId,
 				played: false,
 				mistakes: 0,
 				timeTaken: 0,
-				order: puzzlesCount,
+				repetition: 0,
+				interval: 0,
+				easinessFactor: 2.5,
 			};
 			puzzleSet.puzzles.push(puzzleToInsert);
 			puzzlesCount++;
