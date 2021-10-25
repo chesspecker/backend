@@ -44,8 +44,9 @@ router.post('/sets', sessionValidator, async (request, response, next) => {
 		return next(error);
 	}
 
-	const {themeArray, size, title} = request.body;
-	const puzzleSet = await setGenerator(user, themeArray, size, title);
+	const {themeArray, size, title, level} = request.body;
+	const options = {themeArray, size, title, level};
+	const puzzleSet = await setGenerator(user, options);
 	try {
 		await puzzleSet.populate('user');
 		await puzzleSet.populate('puzzles');

@@ -1,7 +1,9 @@
+/* eslint-disable unicorn/no-array-callback-reference, unicorn/no-array-method-this-argument */
+import {shuffle} from 'help-array';
 import {PuzzleSet} from '../models/puzzle-set-model.js';
 import {Puzzle} from '../models/puzzle-model.js';
 
-const rating = user => {
+const rating = (user, level) => {
 	if (!user.perfs) return;
 	const perf = user.perfs;
 	let totalGameNumber = 1;
@@ -52,81 +54,119 @@ const rating = user => {
 
 	const sum = averageRating.reduce((partialSum, a) => partialSum + a, 0);
 	const ratingTier = sum / totalGameNumber;
-	const minRating = ratingTier - 75;
-	const maxRating = ratingTier + 75;
+	let minRating;
+	let maxRating;
+	switch (level) {
+		case 'easy':
+			minRating = ratingTier - 100;
+			maxRating = ratingTier;
+			break;
+
+		case 'hard':
+			minRating = ratingTier;
+			maxRating = ratingTier + 100;
+			break;
+
+		case 'intermediate':
+		default:
+			minRating = ratingTier - 50;
+			maxRating = ratingTier + 50;
+			break;
+	}
+
 	return [minRating, maxRating, ratingTier];
 };
 
-export default async function setGenerator(user, themeArray, length_, name_) {
+export default async function setGenerator(user, options) {
 	const puzzleSet = new PuzzleSet();
-	const [minRating, maxRating, ratingTier] = rating(user);
+	const setLevel = options.level || 'intermediate';
+	const [minRating, maxRating, ratingTier] = rating(user, setLevel);
 	puzzleSet.user = user._id;
 	puzzleSet.puzzles = [];
 	let puzzlesCount = 0;
 
-	if (themeArray.includes('healthyMix')) {
-		for await (const doc of Puzzle.find(
-			{
-				Rating: {$gt: minRating, $lt: maxRating},
-			},
-			{_id: 1},
-		)) {
-			if (puzzlesCount >= length_) break;
+	const iterateCursor = async query => {
+		const cursor = await Puzzle.find(query, {_id: 1}).exec();
+		const docArray = shuffle(cursor);
+		for (const doc of docArray) {
+			if (puzzlesCount >= options.size) break;
 			const puzzleToInsert = {
 				_id: doc._id,
 				played: false,
 				mistakes: 0,
 				timeTaken: 0,
+				order: puzzlesCount,
 			};
 			puzzleSet.puzzles.push(puzzleToInsert);
 			puzzlesCount++;
 		}
+	};
+
+	let query;
+	if (options.themeArray.includes('healthyMix')) {
+		query = {Rating: {$gt: minRating, $lt: maxRating}};
 	} else {
-		for await (const doc of Puzzle.find(
-			{
+		query = {
+			$and: [
+				{Rating: {$gt: minRating, $lt: maxRating}},
+				{Themes: {$in: [...options.themeArray]}},
+			],
+		};
+	}
+
+	await iterateCursor(query);
+
+	if (puzzlesCount < options.size) {
+		if (options.themeArray.includes('healthyMix')) {
+			query = {Rating: {$gt: minRating - 25, $lt: maxRating + 25}};
+		} else {
+			query = {
 				$and: [
-					{Rating: {$gt: minRating, $lt: maxRating}},
-					{Themes: {$in: [...themeArray]}},
+					{Rating: {$gt: minRating - 25, $lt: maxRating + 25}},
+					{Themes: {$in: [...options.themeArray]}},
 				],
-			},
-			{_id: 1},
-		)) {
-			if (puzzlesCount >= length_) break;
-			const puzzleToInsert = {
-				_id: doc._id,
-				played: false,
-				mistakes: 0,
-				timeTaken: 0,
 			};
-			puzzleSet.puzzles.push(puzzleToInsert);
-			puzzlesCount++;
+			await iterateCursor(query);
 		}
 	}
 
-	if (puzzlesCount < length_) {
-		for await (const doc of Puzzle.find(
-			{
-				Rating: {$gt: minRating, $lt: maxRating},
-			},
-			{_id: 1},
-		)) {
-			if (puzzlesCount >= length_) break;
-			const puzzleToInsert = {
-				_id: doc._id,
-				played: false,
-				mistakes: 0,
-				timeTaken: 0,
+	if (puzzlesCount < options.size) {
+		if (options.themeArray.includes('healthyMix')) {
+			query = {Rating: {$gt: minRating - 50, $lt: maxRating + 50}};
+		} else {
+			query = {
+				$and: [
+					{Rating: {$gt: minRating - 50, $lt: maxRating + 50}},
+					{Themes: {$in: [...options.themeArray]}},
+				],
 			};
-			puzzleSet.puzzles.push(puzzleToInsert);
-			puzzlesCount++;
+			await iterateCursor(query);
+		}
+	}
+
+	if (puzzlesCount < options.size) {
+		if (options.themeArray.includes('healthyMix')) {
+			query = {Rating: {$gt: minRating - 100, $lt: maxRating + 100}};
+		} else {
+			query = {
+				$and: [
+					{Rating: {$gt: minRating - 100, $lt: maxRating + 100}},
+					{Themes: {$in: [...options.themeArray]}},
+				],
+			};
+			await iterateCursor(query);
 		}
 	}
 
 	puzzleSet.length = puzzlesCount;
-	puzzleSet.title = name_;
+	puzzleSet.title = options.title;
 	puzzleSet.tries = 0;
 	puzzleSet.currentTime = 0;
 	puzzleSet.bestTime = 0;
 	puzzleSet.rating = ratingTier;
+	puzzleSet.totalMistakes = 0;
+	puzzleSet.totalPuzzlesPlayed = 0;
+	puzzleSet.accuracy = 1;
+	puzzleSet.level = setLevel;
 	return puzzleSet;
 }

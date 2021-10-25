@@ -10,6 +10,9 @@ const puzzleSetDefinition = new Schema({
 			played: {type: Boolean},
 			mistakes: {type: Number},
 			timeTaken: {type: Number},
+			interval: {type: Number},
+			repetition: {type: Number},
+			easinessFactor: {type: Number},
 		},
 	],
 	title: {type: String},
@@ -18,6 +21,14 @@ const puzzleSetDefinition = new Schema({
 	currentTime: {type: Number},
 	bestTime: {type: Number},
 	rating: {type: Number},
+	totalMistakes: {type: Number},
+	totalPuzzlesPlayed: {type: Number},
+	accuracy: {type: Number},
+	level: {
+		type: String,
+		enum: ['easy', 'intermediate', 'hard'],
+		default: 'intermediate',
+	},
 });
 
 const puzzleSetSchema = new mongoose.Schema(puzzleSetDefinition);
