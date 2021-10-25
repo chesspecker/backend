@@ -72,7 +72,13 @@ export default async function setGenerator(user, themeArray, length_, name_) {
 			{_id: 1},
 		)) {
 			if (puzzlesCount >= length_) break;
-			puzzleSet.puzzles.push(doc._id);
+			const puzzleToInsert = {
+				_id: doc._id,
+				played: false,
+				mistakes: 0,
+				timeTaken: 0,
+			};
+			puzzleSet.puzzles.push(puzzleToInsert);
 			puzzlesCount++;
 		}
 	} else {
@@ -86,7 +92,13 @@ export default async function setGenerator(user, themeArray, length_, name_) {
 			{_id: 1},
 		)) {
 			if (puzzlesCount >= length_) break;
-			puzzleSet.puzzles.push(doc._id);
+			const puzzleToInsert = {
+				_id: doc._id,
+				played: false,
+				mistakes: 0,
+				timeTaken: 0,
+			};
+			puzzleSet.puzzles.push(puzzleToInsert);
 			puzzlesCount++;
 		}
 	}
@@ -99,7 +111,13 @@ export default async function setGenerator(user, themeArray, length_, name_) {
 			{_id: 1},
 		)) {
 			if (puzzlesCount >= length_) break;
-			puzzleSet.puzzles.push(doc._id);
+			const puzzleToInsert = {
+				_id: doc._id,
+				played: false,
+				mistakes: 0,
+				timeTaken: 0,
+			};
+			puzzleSet.puzzles.push(puzzleToInsert);
 			puzzlesCount++;
 		}
 	}
@@ -107,6 +125,7 @@ export default async function setGenerator(user, themeArray, length_, name_) {
 	puzzleSet.length = puzzlesCount;
 	puzzleSet.title = name_;
 	puzzleSet.tries = 0;
+	puzzleSet.currentTime = 0;
 	puzzleSet.bestTime = 0;
 	puzzleSet.rating = ratingTier;
 	return puzzleSet;

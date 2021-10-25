@@ -41,18 +41,33 @@ router.get('/login', async (request, response) => {
 
 router.get('/callback', async (request, response, next) => {
 	const verifier = request.session.codeVerifier;
-	const lichessToken = await getLichessToken(request.query.code, verifier);
 
-	if (!lichessToken.access_token) {
-		return next(new Error('Failed getting token'));
+	let oauthToken;
+	try {
+		const lichessToken = await getLichessToken(request.query.code, verifier);
+		oauthToken = lichessToken.access_token;
+	} catch (error) {
+		return next(new Error(`Failed getting token ${error}`));
 	}
 
-	const oauthToken = lichessToken.access_token;
-	const lichessUser = await getLichessData(oauthToken);
-	request.session.token = oauthToken;
-	request.session.userID = lichessUser.id;
-	request.session.username = lichessUser.username;
-	const {email: userMail} = await getLichessData(oauthToken, '/email');
+	let lichessUser;
+	try {
+		lichessUser = await getLichessData(oauthToken);
+		request.session.token = oauthToken;
+		request.session.userID = lichessUser.id;
+		request.session.username = lichessUser.username;
+	} catch (error) {
+		return next(error);
+	}
+
+	let userMail;
+	try {
+		const result = await getLichessData(oauthToken, '/email');
+		userMail = result.email;
+	} catch (error) {
+		return next(error);
+	}
+
 	const [isAlreadyUsedId, isAlreadyUsedEmail] = await Promise.all([
 		User.exists({id: lichessUser.id}),
 		User.exists({email: userMail}),

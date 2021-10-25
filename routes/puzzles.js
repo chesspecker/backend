@@ -4,6 +4,7 @@ import {PuzzleSet} from '../models/puzzle-set-model.js';
 import {User} from '../models/user-model.js';
 import sessionValidator from '../middlewares/session-validator.js';
 import setGenerator from '../controllers/set-generator.js';
+import setUpdater from '../middlewares/set-updater.js';
 
 const router = new Router();
 
@@ -17,7 +18,13 @@ router.get('/id/:id', sessionValidator, async (request, response, next) => {
 
 router.get('/sets', sessionValidator, async (request, response, next) => {
 	const id = request.session.userID;
-	const user = await User.findOne({id});
+	let user;
+	try {
+		user = await User.findOne({id});
+	} catch (error) {
+		return next(error);
+	}
+
 	PuzzleSet.find({user: user._id}, (error, puzzleSets) => {
 		if (error) return next(error);
 		if (puzzleSets.length === 0) {
@@ -30,22 +37,61 @@ router.get('/sets', sessionValidator, async (request, response, next) => {
 
 router.post('/sets', sessionValidator, async (request, response, next) => {
 	const id = request.session.userID;
-	const user = await User.findOne({id});
+	let user;
+	try {
+		user = await User.findOne({id});
+	} catch (error) {
+		return next(error);
+	}
+
 	const {themeArray, size, title} = request.body;
 	const puzzleSet = await setGenerator(user, themeArray, size, title);
-	await puzzleSet.populate('user');
-	await puzzleSet.populate('puzzles');
+	try {
+		await puzzleSet.populate('user');
+		await puzzleSet.populate('puzzles');
+	} catch (error) {
+		return next(error);
+	}
+
 	let puzzleSetId;
 	puzzleSet.save(async (error, item) => {
 		if (error) return next(error);
 		puzzleSetId = item._id;
 		response.send(puzzleSetId);
 	});
-	await user.update({$push: {puzzleSet: puzzleSetId}});
-	await user.populate('puzzleSet');
-	await user.save(async error => {
-		if (error) return next(error);
-	});
+	/**
+	 * Doesn't work, throwing error :
+	 * 
+MissingSchemaError: Schema hasn't been registered for model "PuzzleSet".
+Use mongoose.model(name, schema)
+    at NativeConnection.Connection.model (/home/ubuntu/chesspecker-backend/node_modules/mongoose/lib/connection.js:1132:11)
+    at addModelNamesToMap (/home/ubuntu/chesspecker-backend/node_modules/mongoose/lib/helpers/populate/getModelsMapForPopulate.js:470:28)
+    at getModelsMapForPopulate (/home/ubuntu/chesspecker-backend/node_modules/mongoose/lib/helpers/populate/getModelsMapForPopulate.js:174:7)
+    at populate (/home/ubuntu/chesspecker-backend/node_modules/mongoose/lib/model.js:4437:21)
+    at _populate (/home/ubuntu/chesspecker-backend/node_modules/mongoose/lib/model.js:4408:5)
+    at /home/ubuntu/chesspecker-backend/node_modules/mongoose/lib/model.js:4385:5
+    at /home/ubuntu/chesspecker-backend/node_modules/mongoose/lib/helpers/promiseOrCallback.js:32:5
+    at new Promise (<anonymous>)
+    at promiseOrCallback (/home/ubuntu/chesspecker-backend/node_modules/mongoose/lib/helpers/promiseOrCallback.js:31:10)
+    at Mongoose._promiseOrCallback (/home/ubuntu/chesspecker-backend/node_modules/mongoose/lib/index.js:1151:10)
+(node:345946) UnhandledPromiseRejectionWarning: Error [ERR_HTTP_HEADERS_SENT]: Cannot set headers after they are sent to the client
+    at ServerResponse.setHeader (_http_outgoing.js:561:11)
+    at ServerResponse.header (/home/ubuntu/chesspecker-backend/node_modules/express/lib/response.js:771:10)
+    at ServerResponse.send (/home/ubuntu/chesspecker-backend/node_modules/express/lib/response.js:170:12)
+    at ServerResponse.json (/home/ubuntu/chesspecker-backend/node_modules/express/lib/response.js:267:15)
+    at ServerResponse.send (/home/ubuntu/chesspecker-backend/node_modules/express/lib/response.js:158:21)
+    at file:///home/ubuntu/chesspecker-backend/routes/puzzles.js:56:12
+    at /home/ubuntu/chesspecker-backend/node_modules/mongoose/lib/model.js:4923:18
+    at processTicksAndRejections (internal/process/task_queues.js:77:11)
+	 
+	try {
+		await user.update({$push: {puzzleSet: puzzleSetId}});
+		await user.populate('puzzleSet');
+		await user.save();
+	} catch (error) {
+		return next(error);
+	}
+	*/
 });
 
 router.get('/set/id/:id', sessionValidator, async (request, response, next) => {
@@ -68,35 +114,6 @@ router.delete(
 	},
 );
 
-router.put('/set/id/:id', sessionValidator, async (request, response, next) => {
-	const puzzleSetId = request.params.id;
-	const {title, bestTime, tries} = request.body;
-	if (!title && !bestTime && !tries) return response.send('empty');
-
-	const puzzleSet = await PuzzleSet.findById(puzzleSetId);
-
-	const updateBlock = {};
-	if (bestTime && puzzleSet.bestTime === 0) {
-		updateBlock.bestTime = bestTime;
-	}
-
-	if (bestTime && bestTime < puzzleSet.bestTime) {
-		updateBlock.bestTime = bestTime;
-	}
-
-	if (title) {
-		updateBlock.title = title;
-	}
-
-	if (tries) {
-		const newTries = tries + puzzleSet.tries;
-		updateBlock.tries = newTries;
-	}
-
-	puzzleSet.update({$set: updateBlock}, error => {
-		if (error) return next(error);
-		response.send('success');
-	});
-});
+router.put('/set/id/:id', sessionValidator, setUpdater);
 
 export default router;
