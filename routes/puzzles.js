@@ -16,6 +16,32 @@ router.get('/id/:id', sessionValidator, async (request, response, next) => {
 	});
 });
 
+router.get(
+	'/sets/dashboard',
+	sessionValidator,
+	async (request, response, next) => {
+		const id = request.session.userID;
+		let user;
+		try {
+			user = await User.findOne({id});
+		} catch (error) {
+			return next(error);
+		}
+
+		PuzzleSet.find(
+			{user: user._id},
+			{title: 1, tries: 1, currentTime: 1, bestTime: 1, accuracy: 1, level: 1},
+		).exec((error, puzzleSets) => {
+			if (error) return next(error);
+			if (puzzleSets.length === 0) {
+				return next(new Error('No puzzle sets found, please create one'));
+			}
+
+			return response.send(puzzleSets);
+		});
+	},
+);
+
 router.get('/sets', sessionValidator, async (request, response, next) => {
 	const id = request.session.userID;
 	let user;
