@@ -30,7 +30,7 @@ router.get(
 
 		PuzzleSet.find(
 			{user: user._id},
-			{title: 1, tries: 1, currentTime: 1, bestTime: 1, accuracy: 1, level: 1},
+			{title: 1, cycles: 1, currentTime: 1, bestTime: 1, accuracy: 1, level: 1},
 		).exec((error, puzzleSets) => {
 			if (error) return next(error);
 			if (puzzleSets.length === 0) {

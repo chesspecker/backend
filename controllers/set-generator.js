@@ -94,6 +94,7 @@ export default async function setGenerator(user, options) {
 				_id: doc._id,
 				PuzzleId: doc.PuzzleId,
 				played: false,
+				order: puzzlesCount,
 				mistakes: 0,
 				timeTaken: 0,
 				repetition: 0,
@@ -163,7 +164,7 @@ export default async function setGenerator(user, options) {
 
 	puzzleSet.length = puzzlesCount;
 	puzzleSet.title = options.title;
-	puzzleSet.tries = 0;
+	puzzleSet.cycles = 0;
 	puzzleSet.currentTime = 0;
 	puzzleSet.bestTime = 0;
 	puzzleSet.rating = ratingTier;

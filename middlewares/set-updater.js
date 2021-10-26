@@ -1,3 +1,4 @@
+import {shuffle} from 'help-array';
 import {PuzzleSet} from '../models/puzzle-set-model.js';
 
 const getGrade = options =>
@@ -47,8 +48,9 @@ const spacedRepetition = (grade, currentPuzzle) => {
 
 const setUpdater = async function (request, response, next) {
 	const puzzleSetId = request.params.id;
-	const {title, bestTime, tries, puzzleId, options} = request.body;
-	if (!title && !bestTime && !tries && !puzzleId) return response.send('empty');
+	const {title, bestTime, cycles, puzzleId, options} = request.body;
+	if (!title && !bestTime && !cycles && !puzzleId)
+		return response.send('empty');
 
 	let puzzleSet;
 	let currentPuzzle;
@@ -116,10 +118,26 @@ const setUpdater = async function (request, response, next) {
 			updateBlock.bestTime = bestTime;
 		}
 
-		if (tries) {
-			const newTries = tries + puzzleSet.tries;
-			updateBlock.tries = newTries;
+		if (cycles) {
+			const newCycles = puzzleSet.cycles + 1;
+			updateBlock.cycles = newCycles;
 		}
+
+		const length_ = puzzleSet.length;
+		let newPuzzleOrder = Array.from(Array.from({length_}).keys());
+		newPuzzleOrder = shuffle(newPuzzleOrder);
+
+		updateBlock.puzzles = {
+			$map: {
+				input: {$range: [0, {$size: '$puzzles'}]},
+				in: {
+					$mergeObjects: [
+						{$arrayElemAt: ['$puzzles', '$$this']},
+						{order: {$arrayElemAt: [newPuzzleOrder, '$$this']}},
+					],
+				},
+			},
+		};
 
 		PuzzleSet.updateOne({_id: puzzleSetId}, {$set: updateBlock}, error => {
 			if (error) return next(error);

@@ -8,6 +8,7 @@ export const userDefinition = new Schema({
 	url: String,
 	email: String,
 	permissionLevel: Number,
+	lastUpdatedAt: Date,
 	perfs: {
 		ultraBullet: {games: Number, rating: Number},
 		bullet: {games: Number, rating: Number},
