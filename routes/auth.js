@@ -5,6 +5,7 @@ import {User} from '../models/user-model.js';
 import getLichessData from '../utils/get-lichess-data.js';
 import getLichessToken from '../utils/get-lichess-token.js';
 import userGenerator from '../controllers/user-generator.js';
+import userUpdater from '../middlewares/user-updater.js';
 
 const router = new Router();
 const clientId = auth.LICHESS_CLIENT_ID;
@@ -20,7 +21,7 @@ const sha256 = buffer => createHash('sha256').update(buffer).digest();
 const createVerifier = () => base64URLEncode(randomBytes(32));
 const createChallenge = verifier => base64URLEncode(sha256(verifier));
 
-router.get('/login', async (request, response) => {
+router.get('/login', userUpdater, async (request, response) => {
 	if (request.session.token) {
 		response.redirect(302, `${siteRedirectUrl}/success-login`);
 	} else {

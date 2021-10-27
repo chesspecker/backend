@@ -7,7 +7,7 @@ export default function userGenerator(lichessUser, userMail) {
 	user.url = lichessUser.url;
 	user.email = userMail;
 	user.permissionLevel = 1;
-	user.lastUpdatedAt = Date.now()
+	user.lastUpdatedAt = Date.now();
 
 	if (lichessUser.perfs.ultraBullet) {
 		user.perfs.ultraBullet = {
