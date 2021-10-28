@@ -20,6 +20,7 @@ const puzzleSetDefinition = new Schema({
 	title: {type: String},
 	length: {type: Number},
 	cycles: {type: Number},
+	spacedRepetition: {type: Boolean},
 	currentTime: {type: Number},
 	bestTime: {type: Number},
 	rating: {type: Number},

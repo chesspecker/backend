@@ -165,6 +165,7 @@ export default async function setGenerator(user, options) {
 	puzzleSet.length = puzzlesCount;
 	puzzleSet.title = options.title;
 	puzzleSet.cycles = 0;
+	puzzleSet.spacedRepetition = false;
 	puzzleSet.currentTime = 0;
 	puzzleSet.bestTime = 0;
 	puzzleSet.rating = ratingTier;
