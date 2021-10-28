@@ -1,3 +1,4 @@
+/* eslint-disable unicorn/no-new-array */
 import {shuffle} from 'help-array';
 import {PuzzleSet} from '../models/puzzle-set-model.js';
 
@@ -124,7 +125,7 @@ const setUpdater = async function (request, response, next) {
 		}
 
 		const length_ = puzzleSet.length;
-		let newPuzzleOrder = Array.from(Array.from({length_}).keys());
+		let newPuzzleOrder = Array.from(new Array(length_).keys());
 		newPuzzleOrder = shuffle(newPuzzleOrder);
 
 		updateBlock.puzzles = {
