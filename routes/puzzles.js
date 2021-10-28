@@ -34,7 +34,9 @@ router.get(
 		).exec((error, puzzleSets) => {
 			if (error) return next(error);
 			if (puzzleSets.length === 0) {
-				return next(new Error('No puzzle sets found, please create one'));
+				const error = new Error('No puzzle sets found, please create one');
+				error.statusCode = 404;
+				return next(error);
 			}
 
 			return response.send(puzzleSets);
@@ -54,7 +56,9 @@ router.get('/sets', sessionValidator, async (request, response, next) => {
 	PuzzleSet.find({user: user._id}, (error, puzzleSets) => {
 		if (error) return next(error);
 		if (puzzleSets.length === 0) {
-			return next(new Error('No puzzle sets found, please create one'));
+			const error = new Error('No puzzle sets found, please create one');
+			error.statusCode = 404;
+			return next(error);
 		}
 
 		return response.send(puzzleSets);
