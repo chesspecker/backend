@@ -7,7 +7,8 @@ import connectRedis from 'connect-redis';
 import {config, secrets} from '../config/config.js';
 import auth from '../routes/auth.js';
 import user from '../routes/user.js';
-import puzzles from '../routes/puzzles.js';
+import set from '../routes/set.js';
+import puzzle from '../routes/puzzle.js';
 import healthCheck from '../routes/health-check.js';
 import errorHandlerMiddleware from '../middlewares/error-handler.js';
 import createClient from './redis.js';
@@ -66,7 +67,8 @@ app.use(session(sessionOptions));
 
 app.use('/auth', auth);
 app.use('/healthCheck', healthCheck);
-app.use('/puzzles', puzzles);
+app.use('/set', set);
+app.use('/puzzle', puzzle);
 app.use('/user', user);
 
 app.use(errorHandlerMiddleware);

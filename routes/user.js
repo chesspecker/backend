@@ -1,11 +1,20 @@
 import {Router} from 'express';
 import sessionValidator from '../middlewares/session-validator.js';
+import {User} from '../models/user-model.js';
 
 const router = new Router();
 
-router.get('/', sessionValidator, async (request, response) => {
+router.get('/', sessionValidator, async (request, response, next) => {
 	const {userID} = request.session;
-	response.json({name: userID});
+	User.findOne({id: userID}, (error, result) => {
+		if (error) return next(error);
+		return response.send(result);
+	});
+});
+
+router.get('/name', sessionValidator, async (request, response) => {
+	const {username} = request.session;
+	response.json({name: username});
 });
 
 export default router;

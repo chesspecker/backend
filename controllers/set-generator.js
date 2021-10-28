@@ -97,6 +97,7 @@ export default async function setGenerator(user, options) {
 				order: puzzlesCount,
 				mistakes: 0,
 				timeTaken: 0,
+				grade: 0,
 				repetition: 0,
 				interval: 0,
 				easinessFactor: 2.5,
@@ -163,6 +164,7 @@ export default async function setGenerator(user, options) {
 	}
 
 	puzzleSet.length = puzzlesCount;
+	puzzleSet.chunkLength = puzzlesCount / 6;
 	puzzleSet.title = options.title;
 	puzzleSet.cycles = 0;
 	puzzleSet.spacedRepetition = false;

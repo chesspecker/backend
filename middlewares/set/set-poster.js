@@ -1,71 +1,7 @@
-import {Router} from 'express';
-import {Puzzle} from '../models/puzzle-model.js';
-import {PuzzleSet} from '../models/puzzle-set-model.js';
-import {User} from '../models/user-model.js';
-import sessionValidator from '../middlewares/session-validator.js';
-import setGenerator from '../controllers/set-generator.js';
-import setUpdater from '../middlewares/set-updater.js';
+import setGenerator from '../../controllers/set-generator.js';
+import {User} from '../../models/user-model.js';
 
-const router = new Router();
-
-router.get('/id/:id', sessionValidator, async (request, response, next) => {
-	const puzzleId = request.params.id;
-	Puzzle.findById(puzzleId, (error, result) => {
-		if (error) return next(error);
-		return response.send(result);
-	});
-});
-
-router.get(
-	'/sets/dashboard',
-	sessionValidator,
-	async (request, response, next) => {
-		const id = request.session.userID;
-		let user;
-		try {
-			user = await User.findOne({id});
-		} catch (error) {
-			return next(error);
-		}
-
-		PuzzleSet.find(
-			{user: user._id},
-			{title: 1, cycles: 1, currentTime: 1, bestTime: 1, accuracy: 1, level: 1},
-		).exec((error, puzzleSets) => {
-			if (error) return next(error);
-			if (puzzleSets.length === 0) {
-				const error = new Error('No puzzle sets found, please create one');
-				error.statusCode = 404;
-				return next(error);
-			}
-
-			return response.send(puzzleSets);
-		});
-	},
-);
-
-router.get('/sets', sessionValidator, async (request, response, next) => {
-	const id = request.session.userID;
-	let user;
-	try {
-		user = await User.findOne({id});
-	} catch (error) {
-		return next(error);
-	}
-
-	PuzzleSet.find({user: user._id}, (error, puzzleSets) => {
-		if (error) return next(error);
-		if (puzzleSets.length === 0) {
-			const error = new Error('No puzzle sets found, please create one');
-			error.statusCode = 404;
-			return next(error);
-		}
-
-		return response.send(puzzleSets);
-	});
-});
-
-router.post('/sets', sessionValidator, async (request, response, next) => {
+const setPoster = async function (request, response, next) {
 	const id = request.session.userID;
 	let user;
 	try {
@@ -123,28 +59,6 @@ Use mongoose.model(name, schema)
 		return next(error);
 	}
 	*/
-});
+};
 
-router.get('/set/id/:id', sessionValidator, async (request, response, next) => {
-	const puzzleSetId = request.params.id;
-	PuzzleSet.findById(puzzleSetId, (error, result) => {
-		if (error) return next(error);
-		return response.send(result);
-	});
-});
-
-router.delete(
-	'/set/id/:id',
-	sessionValidator,
-	async (request, response, next) => {
-		const puzzleSetId = request.params.id;
-		PuzzleSet.deleteOne({_id: puzzleSetId}, error => {
-			if (error) return next(error);
-			return response.send('success');
-		});
-	},
-);
-
-router.put('/set/id/:id', sessionValidator, setUpdater);
-
-export default router;
+export default setPoster;
