@@ -15,7 +15,7 @@ const getGrade = options =>
 			: 1
 		: 0;
 
-const spacedRepetition = (grade, currentPuzzle) => {
+const spacedRepetitionGenerator = (grade, currentPuzzle) => {
 	let nextInterval;
 	let nextRepetition;
 	let nextEasinessFactor;
@@ -179,9 +179,13 @@ const spaceOrder = puzzleSet => {
 
 const setUpdater = async function (request, response, next) {
 	const puzzleSetId = request.params.id;
-	const {title, bestTime, cycles, puzzleId, options} = request.body;
-	if (!title && !bestTime && !cycles && !puzzleId)
-		return response.send('empty');
+	const {title, bestTime, cycles, puzzleId, options, spacedRepetition} =
+		request.body;
+	if (!title && !bestTime && !cycles && !puzzleId) {
+		const error = new Error('Empty request');
+		error.statusCode = 400;
+		return next(error);
+	}
 
 	let puzzleSet;
 	try {
@@ -220,7 +224,7 @@ const setUpdater = async function (request, response, next) {
 
 			const grade = getGrade(options);
 			const [nextInterval, nextRepetition, nextEasinessFactor] =
-				spacedRepetition(grade, currentPuzzle);
+				spacedRepetitionGenerator(grade, currentPuzzle);
 			updateBlock['puzzles.$.interval'] = nextInterval;
 			updateBlock['puzzles.$.repetition'] = nextRepetition;
 			updateBlock['puzzles.$.easinessFactor'] = nextEasinessFactor;
@@ -256,8 +260,12 @@ const setUpdater = async function (request, response, next) {
 			updateBlock.cycles = newCycles;
 		}
 
+		if (spacedRepetition) {
+			updateBlock.spacedRepetition = spacedRepetition;
+		}
+
 		let newPuzzleOrder;
-		if (puzzleSet.spacedRepetition === true) {
+		if (puzzleSet.spacedRepetition === true || spacedRepetition === true) {
 			newPuzzleOrder = spaceOrder(puzzleSet);
 		} else {
 			const length_ = puzzleSet.length;
