@@ -14,35 +14,28 @@ const setUpdater = async function (request, response, next) {
 
 	let puzzleSet;
 	try {
-		puzzleSet = await PuzzleSet.findById(puzzleSetId).exec();
+		puzzleSet = await PuzzleSet.findById(puzzleSetId);
 	} catch (error) {
 		return next(error);
 	}
 
-	const updateBlock = {
-		currentTime: 0,
-		bestTime: puzzleSet.bestTime,
-		cycles: puzzleSet.cycles,
-		spacedRepetition: puzzleSet.spacedRepetition,
-	};
-
-	updateBlock['puzzles.$[].played'] = false;
+	puzzleSet.currentTime = 0;
 
 	if (bestTime && (puzzleSet.bestTime === 0 || bestTime < puzzleSet.bestTime)) {
-		updateBlock.bestTime = bestTime;
+		puzzleSet.bestTime = bestTime;
 	}
 
 	if (cycles) {
 		const newCycles = puzzleSet.cycles + 1;
-		updateBlock.cycles = newCycles;
+		puzzleSet.cycles = newCycles;
 	}
 
 	if (spacedRepetition) {
-		updateBlock.spacedRepetition = spacedRepetition;
+		puzzleSet.spacedRepetition = spacedRepetition;
 	}
 
 	let newPuzzleOrder;
-	if (updateBlock.spacedRepetition === true) {
+	if (puzzleSet.spacedRepetition === true) {
 		newPuzzleOrder = spaceOrderGenerator(puzzleSet);
 	} else {
 		const length_ = puzzleSet.length;
@@ -50,22 +43,20 @@ const setUpdater = async function (request, response, next) {
 		newPuzzleOrder = shuffle(newPuzzleOrder);
 	}
 
-	updateBlock.puzzles = {
-		$map: {
-			input: {$range: [0, {$size: '$puzzles'}]},
-			in: {
-				$mergeObjects: [
-					{$arrayElemAt: ['$puzzles', '$$this']},
-					{order: {$arrayElemAt: [newPuzzleOrder, '$$this']}},
-				],
-			},
-		},
-	};
+	for (let i = 0; i < puzzleSet.puzzles.length; i++) {
+		const element = puzzleSet.puzzles[i];
+		element.order = newPuzzleOrder[i];
+		element.played = false;
+	}
 
-	PuzzleSet.updateOne({_id: puzzleSetId}, {$set: updateBlock}, error => {
-		if (error) return next(error);
-		response.send('success');
-	});
+	puzzleSet
+		.save()
+		.then(() => {
+			response.send('success');
+		})
+		.catch(error => {
+			return next(error);
+		});
 };
 
 export default setUpdater;

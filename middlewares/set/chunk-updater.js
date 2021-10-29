@@ -1,7 +1,7 @@
 import {PuzzleSet} from '../../models/puzzle-set-model.js';
 
 export const spaceOrderGenerator = puzzleSet => {
-	let newPuzzleOrder;
+	const newPuzzleOrder = [];
 	const chunkSize = puzzleSet.chunkLength;
 	let chunk0 = 0;
 	let chunk1 = chunkSize + 1;

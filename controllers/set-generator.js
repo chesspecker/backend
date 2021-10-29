@@ -164,7 +164,7 @@ export default async function setGenerator(user, options) {
 	}
 
 	puzzleSet.length = puzzlesCount;
-	puzzleSet.chunkLength = puzzlesCount / 6;
+	puzzleSet.chunkLength = Math.round(puzzlesCount / 6);
 	puzzleSet.title = options.title;
 	puzzleSet.cycles = 0;
 	puzzleSet.spacedRepetition = false;
