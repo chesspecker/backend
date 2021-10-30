@@ -21,6 +21,14 @@ const sha256 = buffer => createHash('sha256').update(buffer).digest();
 const createVerifier = () => base64URLEncode(randomBytes(32));
 const createChallenge = verifier => base64URLEncode(sha256(verifier));
 
+/**
+ * @openapi
+ * /auth/login:
+ *	get:
+ *		summary: Login a user
+ *		description: If the user has no session, handle oauth login via Lichess, else redirect to https://www.chesspecker.com/success-login
+ */
+
 router.get('/login', userUpdater, async (request, response) => {
 	if (request.session.token) {
 		response.redirect(302, `${siteRedirectUrl}/success-login`);
@@ -40,6 +48,14 @@ router.get('/login', userUpdater, async (request, response) => {
 	}
 });
 
+/**
+ * @openapi
+ * /auth/login:
+ *	get:
+ *		summary: Handle Lichess oauth callback
+ *		description: Create and save a new user, then redirect to https://www.chesspecker.com/success-login
+ */
+
 router.get('/callback', async (request, response, next) => {
 	const verifier = request.session.codeVerifier;
 
@@ -48,7 +64,7 @@ router.get('/callback', async (request, response, next) => {
 		const lichessToken = await getLichessToken(request.query.code, verifier);
 		oauthToken = lichessToken.access_token;
 	} catch (error) {
-		return next(new Error(`Failed getting token ${error}`));
+		return next(error);
 	}
 
 	let lichessUser;
@@ -83,6 +99,14 @@ router.get('/callback', async (request, response, next) => {
 
 	response.redirect(302, `${siteRedirectUrl}/success-login`);
 });
+
+/**
+ * @openapi
+ * /auth/login:
+ *	get:
+ *		summary: Logout a user
+ *		description: Destroy user redis session
+ */
 
 router.get('/logout', (request, response, next) => {
 	request.session.destroy(error => {
