@@ -1,11 +1,10 @@
 import {User} from '../models/user-model.js';
 
-export default function userGenerator(lichessUser, userMail) {
+export default function userGenerator(lichessUser) {
 	const user = new User();
 	user.id = lichessUser.id;
 	user.username = lichessUser.username;
 	user.url = lichessUser.url;
-	user.email = userMail;
 	user.permissionLevel = 1;
 	user.lastUpdatedAt = Date.now();
 

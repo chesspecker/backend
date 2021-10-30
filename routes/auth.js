@@ -32,7 +32,7 @@ router.get('/login', userUpdater, async (request, response) => {
 			response_type: 'code',
 			client_id: clientId,
 			redirect_uri: `${siteUrl}/auth/callback`,
-			scope: 'preference:read email:read',
+			scope: 'preference:read',
 			code_challenge_method: 'S256',
 			code_challenge: challenge,
 		});
@@ -61,21 +61,9 @@ router.get('/callback', async (request, response, next) => {
 		return next(error);
 	}
 
-	let userMail;
-	try {
-		const result = await getLichessData(oauthToken, '/email');
-		userMail = result.email;
-	} catch (error) {
-		return next(error);
-	}
-
-	const [isAlreadyUsedId, isAlreadyUsedEmail] = await Promise.all([
-		User.exists({id: lichessUser.id}),
-		User.exists({email: userMail}),
-	]);
-	const userExists = isAlreadyUsedId || isAlreadyUsedEmail;
-	if (!userExists) {
-		const user = userGenerator(lichessUser, userMail);
+	const isAlreadyUsedId = await User.exists({id: lichessUser.id});
+	if (isAlreadyUsedId) {
+		const user = userGenerator(lichessUser);
 		user.save(error => {
 			if (error) return next(error);
 		});

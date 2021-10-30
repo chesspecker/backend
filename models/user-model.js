@@ -6,7 +6,6 @@ export const userDefinition = new Schema({
 	id: String,
 	username: String,
 	url: String,
-	email: String,
 	permissionLevel: Number,
 	lastUpdatedAt: Date,
 	perfs: {
