@@ -6,7 +6,12 @@ const userUpdater = async function (request, _response, next) {
 	if (!id) return next();
 	let user;
 	try {
-		user = await User.findOne({id});
+		user = await User.findOne({id}).exec();
+		if (user === null) {
+			const error = new Error('user not found');
+			error.statusCode = 400;
+			throw error;
+		}
 	} catch (error) {
 		return next(error);
 	}
@@ -17,7 +22,13 @@ const userUpdater = async function (request, _response, next) {
 	const lastUpdateInMilliseconds = lastUpdate.getTime();
 
 	if (today > lastUpdateInMilliseconds + ONE_WEEK) {
-		const lichessUser = await getLichessData(request.session.token);
+		let lichessUser;
+		try {
+			lichessUser = await getLichessData(request.session.token);
+		} catch (error) {
+			return next(error);
+		}
+
 		user.id = lichessUser.id;
 		user.username = lichessUser.username;
 		user.url = lichessUser.url;

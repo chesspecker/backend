@@ -9,6 +9,7 @@ router.get('/:id', sessionValidator, async (request, response, next) => {
 	const puzzleId = request.params.id;
 	Puzzle.findById(puzzleId, (error, result) => {
 		if (error) return next(error);
+		if (result === null) return next(new Error('puzzle not found'));
 		return response.send(result);
 	});
 });

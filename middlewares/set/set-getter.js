@@ -5,7 +5,12 @@ const setGetter = async function (request, response, next) {
 	const id = request.session.userID;
 	let user;
 	try {
-		user = await User.findOne({id});
+		user = await User.findOne({id}).exec();
+		if (user === null) {
+			const error = new Error('user not found');
+			error.statusCode = 400;
+			throw error;
+		}
 	} catch (error) {
 		return next(error);
 	}
@@ -13,7 +18,7 @@ const setGetter = async function (request, response, next) {
 	PuzzleSet.find({user: user._id}, (error, puzzleSets) => {
 		if (error) return next(error);
 		if (puzzleSets.length === 0) {
-			const error = new Error('No puzzle sets found, please create one');
+			const error = new Error('no puzzleSets found');
 			error.statusCode = 404;
 			return next(error);
 		}
@@ -28,7 +33,12 @@ export const setGetterDashboard = async function (request, response, next) {
 	const id = request.session.userID;
 	let user;
 	try {
-		user = await User.findOne({id});
+		user = await User.findOne({id}).exec();
+		if (user === null) {
+			const error = new Error('user not found');
+			error.statusCode = 400;
+			throw error;
+		}
 	} catch (error) {
 		return next(error);
 	}
@@ -39,7 +49,7 @@ export const setGetterDashboard = async function (request, response, next) {
 	).exec((error, puzzleSets) => {
 		if (error) return next(error);
 		if (puzzleSets.length === 0) {
-			const error = new Error('No puzzle sets found, please create one');
+			const error = new Error('no puzzleSets found');
 			error.statusCode = 404;
 			return next(error);
 		}

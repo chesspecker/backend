@@ -5,14 +5,26 @@ const setPoster = async function (request, response, next) {
 	const id = request.session.userID;
 	let user;
 	try {
-		user = await User.findOne({id});
+		user = await User.findOne({id}).exec();
+		if (user === null) {
+			const error = new Error('user not found');
+			error.statusCode = 400;
+			throw error;
+		}
 	} catch (error) {
 		return next(error);
 	}
 
 	const {themeArray, size, title, level} = request.body;
 	const options = {themeArray, size, title, level};
-	const puzzleSet = await setGenerator(user, options);
+
+	let puzzleSet;
+	try {
+		puzzleSet = await setGenerator(user, options);
+	} catch (error) {
+		return next(error);
+	}
+
 	try {
 		await puzzleSet.populate('user');
 		await puzzleSet.populate('puzzles');

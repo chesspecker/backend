@@ -54,15 +54,23 @@ router.get('/callback', async (request, response, next) => {
 	let lichessUser;
 	try {
 		lichessUser = await getLichessData(oauthToken);
-		request.session.token = oauthToken;
-		request.session.userID = lichessUser.id;
-		request.session.username = lichessUser.username;
+		if (!lichessUser) throw new Error('user login failed');
 	} catch (error) {
 		return next(error);
 	}
 
-	const isAlreadyUsedId = await User.exists({id: lichessUser.id});
-	if (isAlreadyUsedId) {
+	request.session.token = oauthToken;
+	request.session.userID = lichessUser.id;
+	request.session.username = lichessUser.username;
+
+	let isAlreadyUsedId;
+	try {
+		isAlreadyUsedId = await User.exists({id: lichessUser.id});
+	} catch (error) {
+		return next(error);
+	}
+
+	if (!isAlreadyUsedId) {
 		const user = userGenerator(lichessUser);
 		user.save(error => {
 			if (error) return next(error);

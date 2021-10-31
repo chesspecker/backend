@@ -22,14 +22,16 @@ router.get('/id/:id', sessionValidator, async (request, response, next) => {
 	const puzzleSetId = request.params.id;
 	PuzzleSet.findById(puzzleSetId, (error, result) => {
 		if (error) return next(error);
+		if (result === null) return next(new Error('puzzleSet not found'));
 		return response.send(result);
 	});
 });
 
 router.delete('/id/:id', sessionValidator, async (request, response, next) => {
 	const puzzleSetId = request.params.id;
-	PuzzleSet.deleteOne({_id: puzzleSetId}, error => {
+	PuzzleSet.deleteOne({_id: puzzleSetId}, (error, result) => {
 		if (error) return next(error);
+		if (result === null) return next(new Error('puzzleSet not found'));
 		return response.send('success');
 	});
 });

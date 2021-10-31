@@ -31,8 +31,17 @@ const puzzleSetDefinition = new Schema({
 	accuracy: {type: Number},
 	level: {
 		type: String,
-		enum: ['easy', 'intermediate', 'hard'],
-		default: 'intermediate',
+		enum: [
+			'easiest',
+			'easier',
+			'easy',
+			'normal',
+			'intermediate',
+			'hard',
+			'harder',
+			'hardest',
+		],
+		default: 'normal',
 	},
 });
 

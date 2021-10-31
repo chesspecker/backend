@@ -14,7 +14,12 @@ const setUpdater = async function (request, response, next) {
 
 	let puzzleSet;
 	try {
-		puzzleSet = await PuzzleSet.findById(puzzleSetId);
+		puzzleSet = await PuzzleSet.findById(puzzleSetId).exec();
+		if (puzzleSet === null) {
+			const error = new Error('puzzleSet not found');
+			error.statusCode = 400;
+			throw error;
+		}
 	} catch (error) {
 		return next(error);
 	}

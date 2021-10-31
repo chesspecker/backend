@@ -15,6 +15,10 @@ const getLichessToken = async (authCode, verifier) =>
 			code: authCode,
 			code_verifier: verifier,
 		}),
-	}).then(response => response.json());
+	})
+		.then(response => response.json())
+		.catch(error => {
+			throw error;
+		});
 
 export default getLichessToken;

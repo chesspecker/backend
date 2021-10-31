@@ -1,10 +1,10 @@
-const sessionValidator = async function (request, response, next) {
+const sessionValidator = async function (request, _response, next) {
 	if (request.session.token) {
 		next();
 	} else {
-		response
-			.status(403)
-			.json({status: 'error', reason: 'No session cookie found'});
+		const error = new Error('no session cookie');
+		error.statusCode = 403;
+		next(error);
 	}
 };
 
