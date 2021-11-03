@@ -17,6 +17,7 @@ import SocketService from './socket-io.js';
 const corsOptions = {
 	origin: [
 		'https://chesspecker.com',
+		'https://dev.chesspecker.com',
 		'https://api.chesspecker.com',
 		'https://www.chesspecker.com',
 		`http://localhost:${config.port}`,
