@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 import {createHash, randomBytes} from 'node:crypto';
 import {Router} from 'express';
 import {auth, siteUrl, siteRedirectUrl} from '../config/config.js';
@@ -6,6 +7,7 @@ import getLichessData from '../utils/get-lichess-data.js';
 import getLichessToken from '../utils/get-lichess-token.js';
 import userGenerator from '../controllers/user-generator.js';
 import userUpdater from '../middlewares/user-updater.js';
+import {dbValidator} from '../middlewares/session-validator.js';
 
 const router = new Router();
 const clientId = auth.LICHESS_CLIENT_ID;
@@ -21,23 +23,19 @@ const sha256 = buffer => createHash('sha256').update(buffer).digest();
 const createVerifier = () => base64URLEncode(randomBytes(32));
 const createChallenge = verifier => base64URLEncode(sha256(verifier));
 
-router.get('/login', userUpdater, async (request, response) => {
-	if (request.session.token) {
-		response.redirect(302, `${siteRedirectUrl}/success-login`);
-	} else {
-		const verifier = createVerifier();
-		const challenge = createChallenge(verifier);
-		request.session.codeVerifier = verifier;
-		const linkParameters = new URLSearchParams({
-			response_type: 'code',
-			client_id: clientId,
-			redirect_uri: `${siteUrl}/auth/callback`,
-			scope: 'preference:read',
-			code_challenge_method: 'S256',
-			code_challenge: challenge,
-		});
-		response.redirect(302, `https://lichess.org/oauth?${linkParameters}`);
-	}
+router.get('/login', dbValidator, userUpdater, async (request, response) => {
+	const verifier = createVerifier();
+	const challenge = createChallenge(verifier);
+	request.session.codeVerifier = verifier;
+	const linkParameters = new URLSearchParams({
+		response_type: 'code',
+		client_id: clientId,
+		redirect_uri: `${siteUrl}/auth/callback`,
+		scope: 'preference:read',
+		code_challenge_method: 'S256',
+		code_challenge: challenge,
+	});
+	response.redirect(302, `https://lichess.org/oauth?${linkParameters}`);
 });
 
 router.get('/callback', async (request, response, next) => {
