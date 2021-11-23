@@ -18,7 +18,7 @@ router.put('/complete/:id', sessionValidator, setUpdater);
 router.put('/chunk/:id', sessionValidator, chunkUpdater);
 router.put('/title/:id', sessionValidator, setTitleUpdater);
 
-router.get('/id/:id', sessionValidator, async (request, response, next) => {
+router.get('/id/:id', async (request, response, next) => {
 	const puzzleSetId = request.params.id;
 	PuzzleSet.findById(puzzleSetId, (error, result) => {
 		if (error) return next(error);
