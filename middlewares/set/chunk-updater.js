@@ -4,11 +4,11 @@ export const spaceOrderGenerator = puzzleSet => {
 	const newPuzzleOrder = [];
 	const chunkSize = puzzleSet.chunkLength;
 	let chunk0 = 0;
-	let chunk1 = chunkSize + 1;
-	let chunk2 = chunkSize * 2 + 1;
-	let chunk3 = chunkSize * 3 + 1;
-	let chunk4 = chunkSize * 4 + 1;
-	let chunk5 = chunkSize * 5 + 1;
+	let chunk1 = chunkSize * 6 + 1;
+	let chunk2 = chunkSize * 6 * 2 + 1;
+	let chunk3 = chunkSize * 6 * 3 + 1;
+	let chunk4 = chunkSize * 6 * 4 + 1;
+	let chunk5 = chunkSize * 6 * 5 + 1;
 	const sum0 = () => chunk0;
 	const sum1 = () => chunk0 + chunk1;
 	const sum2 = () => chunk0 + chunk1 + chunk2;
@@ -20,92 +20,31 @@ export const spaceOrderGenerator = puzzleSet => {
 		const element = puzzleSet.puzzles[index];
 		switch (element.grade) {
 			case 0: {
-				if (chunk0 < chunkSize) {
-					chunk0++;
-					newPuzzleOrder.push(sum0());
-				} else if (chunk1 < chunkSize) {
-					chunk1++;
-					newPuzzleOrder.push(sum1());
-				} else if (chunk2 < chunkSize) {
-					chunk2++;
-					newPuzzleOrder.push(sum2());
-				} else if (chunk3 < chunkSize) {
-					chunk3++;
-					newPuzzleOrder.push(sum3());
-				} else if (chunk4 < chunkSize) {
-					chunk4++;
-					newPuzzleOrder.push(sum4());
-				} else {
-					chunk5++;
-					newPuzzleOrder.push(sum5());
-				}
-
+				chunk0++;
+				newPuzzleOrder.push(sum0());
 				break;
 			}
 
 			case 1: {
-				if (chunk1 < chunkSize) {
-					chunk1++;
-					newPuzzleOrder.push(sum1());
-				} else if (chunk2 < chunkSize) {
-					chunk2++;
-					newPuzzleOrder.push(sum2());
-				} else if (chunk3 < chunkSize) {
-					chunk3++;
-					newPuzzleOrder.push(sum3());
-				} else if (chunk4 < chunkSize) {
-					chunk4++;
-					newPuzzleOrder.push(sum4());
-				} else {
-					chunk5++;
-					newPuzzleOrder.push(sum5());
-				}
-
+				chunk1++;
+				newPuzzleOrder.push(sum1());
 				break;
 			}
 
 			case 2: {
-				if (chunk2 < chunkSize) {
-					chunk2++;
-					newPuzzleOrder.push(sum2());
-				} else if (chunk3 < chunkSize) {
-					chunk3++;
-					newPuzzleOrder.push(sum3());
-				} else if (chunk4 < chunkSize) {
-					chunk4++;
-					newPuzzleOrder.push(sum4());
-				} else {
-					chunk5++;
-					newPuzzleOrder.push(sum5());
-				}
-
+				chunk2++;
+				newPuzzleOrder.push(sum2());
 				break;
 			}
 
 			case 3: {
-				if (chunk3 < chunkSize) {
-					chunk3++;
-					newPuzzleOrder.push(sum3());
-				} else if (chunk4 < chunkSize) {
-					chunk4++;
-					newPuzzleOrder.push(sum4());
-				} else {
-					chunk5++;
-					newPuzzleOrder.push(sum5());
-				}
-
+				chunk3++;
+				newPuzzleOrder.push(sum3());
 				break;
 			}
 
 			case 4: {
-				if (chunk4 < chunkSize) {
-					chunk4++;
-					newPuzzleOrder.push(sum4());
-				} else {
-					chunk5++;
-					newPuzzleOrder.push(sum5());
-				}
-
+				chunk4++;
 				break;
 			}
 
