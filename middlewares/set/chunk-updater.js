@@ -44,6 +44,7 @@ export const spaceOrderGenerator = puzzleSet => {
 			}
 
 			case 4: {
+				newPuzzleOrder.push(sum4());
 				chunk4++;
 				break;
 			}
